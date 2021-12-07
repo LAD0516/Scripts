@@ -1,0 +1,24 @@
+{
+  "name":"GnA1J-Task",
+  "description":"重写添加附加组件即可",
+  "task":[
+    {
+      "config":"16 8 * * * https://gitee.com/GnA1J/Scripts/raw/main/QuanX/Task/dww.js, tag=电玩屋签到, img-url=https://z3.ax1x.com/2021/11/22/IxGcct.png, enabled=true",
+      "addons":"https://gitee.com/GnA1J/Scripts/raw/main/QuanX/Task/dwwck.conf,tag=电玩屋_获取Cookie"
+    },
+    {
+      "config":"*/30 7 * * * https://gitee.com/GnA1J/Scripts/raw/main/QuanX/Task/Youth_banner.js, tag=中青浏览赚, img-url=https://qxnav.com/rules/QuantumultX/img/youth.png, enabled=true",
+      "addons":"https://gitee.com/GnA1J/Scripts/raw/main/QuanX/Task/zq_llz_ck.conf,tag=中青浏览赚_获取Cookiee"
+    },
+    {
+      "config":"10 */2 * * * https://gitee.com/GnA1J/Scripts/raw/main/QuanX/Task/Youth_Read.js, tag=中青自动阅读, img-url=https://qxnav.com/rules/QuantumultX/img/youth.png, enabled=true",
+      "addons":"https://gitee.com/GnA1J/Scripts/raw/main/QuanX/Task/zqydck.conf,tag=中青自动阅读_获取Cookiee"
+    },
+    {
+      "config":"*/50 * * * * https://gitee.com/GnA1J/Scripts/raw/main/QuanX/Task/Youth.js, tag=中青签到&宝箱, img-url=https://qxnav.com/rules/QuantumultX/img/youth.png, enabled=true",
+      "addons":"https://gitee.com/GnA1J/Scripts/raw/main/QuanX/Task/zq_cookie.conf,tag=中青签到&宝箱_获取Cookiee"
+    }
+    
+  ],
+
+}

@@ -1,0 +1,67 @@
+{
+	"request": [
+		{
+			"enable": true,
+			"name": "GoogleAPIs",
+			"ruleType": "redirect",
+			"matchType": "regexp",
+			"pattern": "^https?://ajax\\.googleapis\\.com/(.*)",
+			"exclude": "",
+			"isFunction": false,
+			"action": "redirect",
+			"to": "https://gapis.geekzu.org/ajax/$1",
+			"group": "Google"
+		},
+		{
+			"enable": true,
+			"name": "reCAPTCHA",
+			"ruleType": "redirect",
+			"matchType": "regexp",
+			"pattern": "^https?://www\\.google\\.com/recaptcha/(.*)",
+			"exclude": "",
+			"isFunction": false,
+			"action": "redirect",
+			"to": "https://recaptcha.net/recaptcha/$1",
+			"group": "Google"
+		},
+		{
+			"enable": true,
+			"name": "蓝奏云域名转换",
+			"ruleType": "redirect",
+			"matchType": "regexp",
+			"pattern": "^https?://ww.\\.lanzou.\\.com/(.*)",
+			"exclude": "",
+			"group": "自用",
+			"isFunction": false,
+			"action": "redirect",
+			"to": "https:/pan.lanzou.com/$1"
+		},
+		{
+			"enable": true,
+			"name": "知乎站内直链",
+			"ruleType": "redirect",
+			"matchType": "regexp",
+			"pattern": "^https://link.zhihu.com/.target=https.3A/(.*)",
+			"exclude": "",
+			"group": "自用",
+			"isFunction": false,
+			"action": "redirect",
+			"to": "https://$1"
+		}
+	],
+	"sendHeader": [],
+	"receiveHeader": [
+		{
+			"enable": true,
+			"name": "CSP allows redirections",
+			"ruleType": "modifyReceiveHeader",
+			"matchType": "all",
+			"pattern": "",
+			"exclude": "",
+			"isFunction": true,
+			"code": "let rt = detail.type;\nif (rt === 'script' || rt === 'stylesheet' || rt === 'main_frame' || rt === 'sub_frame') {\n  for (let i in val) {\n    if (val[i].name.toLowerCase() === 'content-security-policy') {\n      let s = val[i].value;\n      s = s.replace(/googleapis\\.com/g, '$& https://gapis.geekzu.org');\n      s = s.replace(/google\\.com/g, '$& https://recaptcha.net');\n      s = s.replace(/gstatic\\.com/g, '$& https://*.gstatic.cn');\n      val[i].value = s;\n      break;\n    }\n  }\n}",
+			"group": "Google"
+		}
+	],
+	"receiveBody": []
+}
