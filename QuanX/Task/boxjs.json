@@ -1,43 +1,38 @@
 {
 
+
 	"id": "GnA1J.app.sub",
-
 	"name": "GnA1J脚本订阅",
-
 	"author": "@GnA1J",
-        
-        "icon": "https://github.com/LAD0516/Scripts/raw/main/QuanX/images/JC.png",
+	"icon": "https://ghproxy.com/https://github.com/LAD0516/Scripts/raw/main/QuanX/images/JC.png",
 	
-	"apps": [{
-
+	"apps": [
+	
+	
+	{
 		"id": "dww",
-
 		"name": "电玩屋签到",
-
 		"keys": [    
-                      "dwwhd",
-                      "dwwhd2",
-                      "dwwhd3"
-            	],
-
-		"author": "@GnA1J",
-
-		"settings": [{
-
+	                  "dwwhd",
+	                  "dwwhd2",
+	                  "dwwhd3"
+	        	],
+	
+	"author": "@GnA1J",
+	
+	"settings": [
+		{
 			"id": "dww",
 			"name": "当前账号",
 			"val": "1",
 			"type": "number",
 			"desc": "当前抓取ck记录的账号序号，如：1、2、3、"
-
 		},{
-
 			"id": "CountNumber",
 			"name": "账号个数",
-			"val": "1",
+ 			"val": "1",
 			"type": "number",
 			"desc": "指定任务最多跑几个账号，根据抓取的账号数据个数来设值"
-
 		},{
 			"id": "ZH",
 			"name": "账号",
@@ -51,68 +46,64 @@
 			"type": "text",
 			"desc": "密码"
 		}
-        ],
-
-		"repo": "https://gitee.com/GnA1J/Scripts/raw/main/QuanX/Task/dww.js",
-
-		"icons": [
-
+				],
+	
+	"repo": "https://ghproxy.com/https://github.com/LAD0516/Scripts/raw/main/QuanX/Task/dww.js",
+	
+	"icons": [
+	
 			"https://z3.ax1x.com/2021/11/22/IxGcct.png",
-
+	
 		    "https://z3.ax1x.com/2021/11/22/IxGcct.png"
-
-		],
-
-		"script": "https://gitee.com/GnA1J/Scripts/raw/main/QuanX/Task/dww.js"
-
+	
+			 ],
+	
+	"script": "https://ghproxy.com/https://github.com/LAD0516/Scripts/raw/main/QuanX/Task/dww.js"
+	
 	},
-   {
-
+	
+	
+	
+	{
 		"id": "zqllz",
 		"name": "中青浏览赚",
 		"keys": [
-                    "youth_start",
-                    "youth_look",
-			        "youth_start2",
-                    "youth_look2"
- 
-
-		],
-
+				"youth_start",
+				"youth_look",
+				"youth_start2",
+				"youth_look2"
+				],
+	
 		"author": "@GnA1J",
-
-		"settings": [{
-
+	"settings": [
+		{
 			"id": "zqllz",
 			"name": "当前账号",
 			"val": "1",
 			"type": "number",
 			"desc": "当前抓取ck记录的账号序号，如：1、2、3、"
-
 		}, {
-
 			"id": "CountNumber",
 			"name": "账号个数",
 			"val": "1",
 			"type": "number",
 			"desc": "指定任务最多跑几个账号，根据抓取的账号数据个数来设值"
-
-		}],
-
-		"repo": "https://gitee.com/GnA1J/Scripts/raw/main/QuanX/Task/Youth_banner.js",
-
-		"icons": [
-
-			"https://cdn.jsdelivr.net/gh/Orz-3/mini@master/Alpha/youth.png",
-
-		    "https://cdn.jsdelivr.net/gh/Orz-3/mini@master/Alpha/youth.png"
-
-		],
-
-		"script": "https://gitee.com/GnA1J/Scripts/raw/main/QuanX/Task/Youth_banner.js"
-
-	}
+		}
+				],
 	
-]	
+		"repo": "https://ghproxy.com/https://github.com/LAD0516/Scripts/raw/main/QuanX/Task/Youth_banner.js",
+	
+		"icons": [
+			"https://cdn.jsdelivr.net/gh/Orz-3/mini@master/Alpha/youth.png",
+			"https://cdn.jsdelivr.net/gh/Orz-3/mini@master/Alpha/youth.png"
+				],
+	
+		"script": "https://ghproxy.com/https://github.com/LAD0516/Scripts/raw/main/QuanX/Task/Youth_banner.js"
+	}
+
+
+
+			]	
+
 
 }
