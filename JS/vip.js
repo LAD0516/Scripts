@@ -32,7 +32,7 @@
 	// 解析接口菜单框展开的速度（如果展开动画卡顿请设置0,单位是秒）
 	var developMenuSecond = 0.2;
 	// 解析接口（可多个）
-	const parseInterfaces =["https://z1.m1907.cn/?eps=0&jx=","https://vip.parwix.com:4433/player/?url=","https://lecurl.cn/?url=","https://jx.m3u8.tv/jiexi/?url=","https://api.leduotv.com/wp-api/ifr.php?isDp=1&vid=","https://okjx.cc/?url=","https://m2090.com/?url=","http://51wujin.net/?url=","https://vip.2ktvb.com/player/?url=","https://660e.com/?url=","https://api.sigujx.com/?url=","https://jiexi.janan.net/jiexi/?url=","https://jx.618g.com/?url=","https://jx.ergan.top/?url=","https://api.147g.cc/m3u8.php?url=","http://17kyun.com/api.php?url="];
+	const parseInterfaces =["https://z1.m1907.cn/?jx=","https://vip.parwix.com:4433/player/?url=","https://vip.2ktvb.com/player/?url=","https://jx.aidouer.net/?url=","https://vip.bljiex.com/?v=","https://okjx.cc/?url=","https://m2090.com/?url=","http://51wujin.net/?url=","https://vip.2ktvb.com/player/?url=","https://660e.com/?url=","https://api.sigujx.com/?url=","https://jiexi.janan.net/jiexi/?url=","https://jx.618g.com/?url=","https://jx.ergan.top/?url=","https://api.147g.cc/m3u8.php?url=","http://17kyun.com/api.php?url="];
 	/*
 	 * 非自定义区域
 	 * 以下代码勿动
