@@ -1,3 +1,4 @@
+dxx();
 function dxx(){
 const url = `http://dxx.howtion.cn/api/study`;
 const method = `POST`;
