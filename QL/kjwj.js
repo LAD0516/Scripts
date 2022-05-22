@@ -31,7 +31,7 @@ class UserInfo {
     async login() {
         if(!this.usr || !this.pwd) {
             console.log(`账号[${this.index}]没有找到正确的用户名密码，请检查`)
-            msg += `账号[${this.index}]没有找到正确的用户名密码，请检查`
+            msg += `账号[${this.index}]没有找到正确的用户名密码，请检查\n`
                      return;
         }
         let url = `https://www.kejiwanjia.com/wp-json/jwt-auth/v1/token`
@@ -43,12 +43,12 @@ class UserInfo {
         //console.log(result)
         if(result.code) {
             console.log(`账号[${this.index}]登录失败：${result.message}`)
-            msg += (`账号[${this.index}]登录失败：${result.message}`)
+            msg += (`账号[${this.index}]登录失败：${result.message}\n`)
         } else {
             this.name = result.name
             this.token = result.token
             console.log(`账号[${this.name}]登录成功，现有积分：${result.credit}`)
-            msg += `账号[${this.name}]登录成功，现有积分：${result.credit}`
+            msg += `账号[${this.name}]登录成功，现有积分：${result.credit}\n`
             await $.wait(500);
             await this.getUserMission();
         }
@@ -64,14 +64,14 @@ class UserInfo {
         //console.log(result)
         if(result.code) {
             console.log(`账号[${this.name}]签到失败：${result}`)
-            msg += `账号[${this.name}]签到失败：${result}`
+            msg += `账号[${this.name}]签到失败：${result}\n`
         } else {
             if(result.mission.credit == 0) {
                 await $.wait(500);
                 await this.doSign();
             } else {
                 console.log(`账号[${this.name}]今天已签到，获得了${result.mission.credit}积分`)
-                msg += `账号[${this.name}]今天已签到，获得了${result.mission.credit}积分`
+                msg += `账号[${this.name}]今天已签到，获得了${result.mission.credit}积分\n`
             }
         }
     }
@@ -86,11 +86,11 @@ class UserInfo {
         //console.log(result)
         if(result.code) {
             console.log(`账号[${this.name}]签到失败：${result}`)
-            msg += `账号[${this.name}]签到失败：${result}`
+            msg += `账号[${this.name}]签到失败：${result}\n`
         } else {
             if(result.credit) {
                 console.log(`账号[${this.name}]签到成功，获得${result.credit}积分，现有积分：${result.mission.my_credit}`)
-                msg += `账号[${this.name}]签到成功，获得${result.credit}积分，现有积分：${result.mission.my_credit}`
+                msg += `账号[${this.name}]签到成功，获得${result.credit}积分，现有积分：${result.mission.my_credit}\n`
             }
         }
     }
