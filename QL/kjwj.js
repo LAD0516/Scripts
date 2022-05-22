@@ -1,15 +1,14 @@
 /*
 #科技玩家-签到
 cron: 34 9,21 * * *
-
 export kjwjCookie='username=你的账号; password=你的密码;'
 */
 const $ = new Env('科技玩家签到');
 const jsname = '科技玩家签到'
 const logDebug = 0
 
-const notifyFlag = 1; //0为关闭通知，1为打开通知,默认为1
-let notifyStr = ''
+const Notify = 1; //0为关闭通知，1为打开通知,默认为1
+let msg = ''
 
 let envSplitor = ['\n','#']
 let httpResult //global buffer
@@ -32,7 +31,8 @@ class UserInfo {
     async login() {
         if(!this.usr || !this.pwd) {
             console.log(`账号[${this.index}]没有找到正确的用户名密码，请检查`)
-            return;
+            msg += `账号[${this.index}]没有找到正确的用户名密码，请检查`
+                     return;
         }
         let url = `https://www.kejiwanjia.com/wp-json/jwt-auth/v1/token`
         let body = `nickname=&username=${encodeURIComponent(this.usr)}&password=${this.pwd}&code=&img_code=&invitation_code=&token=&smsToken=&luoToken=&confirmPassword=&loginType=`
@@ -43,10 +43,12 @@ class UserInfo {
         //console.log(result)
         if(result.code) {
             console.log(`账号[${this.index}]登录失败：${result.message}`)
+            msg += (`账号[${this.index}]登录失败：${result.message}`)
         } else {
             this.name = result.name
             this.token = result.token
             console.log(`账号[${this.name}]登录成功，现有积分：${result.credit}`)
+            msg += `账号[${this.name}]登录成功，现有积分：${result.credit}`
             await $.wait(500);
             await this.getUserMission();
         }
@@ -62,12 +64,14 @@ class UserInfo {
         //console.log(result)
         if(result.code) {
             console.log(`账号[${this.name}]签到失败：${result}`)
+            msg += `账号[${this.name}]签到失败：${result}`
         } else {
             if(result.mission.credit == 0) {
                 await $.wait(500);
                 await this.doSign();
             } else {
                 console.log(`账号[${this.name}]今天已签到，获得了${result.mission.credit}积分`)
+                msg += `账号[${this.name}]今天已签到，获得了${result.mission.credit}积分`
             }
         }
     }
@@ -82,9 +86,11 @@ class UserInfo {
         //console.log(result)
         if(result.code) {
             console.log(`账号[${this.name}]签到失败：${result}`)
+            msg += `账号[${this.name}]签到失败：${result}`
         } else {
             if(result.credit) {
                 console.log(`账号[${this.name}]签到成功，获得${result.credit}积分，现有积分：${result.mission.my_credit}`)
+                msg += `账号[${this.name}]签到成功，获得${result.credit}积分，现有积分：${result.mission.my_credit}`
             }
         }
     }
@@ -99,6 +105,7 @@ class UserInfo {
         for(let user of userList) {
             await user.login(); 
             await $.wait(200);
+            await SendMsg(msg);
         }
     }
 })()
@@ -147,18 +154,20 @@ async function checkEnv() {
 }
 
 //通知
-async function showmsg() {
-    if(!notifyStr) return;
-    notifyBody = jsname + "运行通知\n\n" + notifyStr
-    if (notifyFlag > 0) {
-        $.msg(notifyBody);
-        if($.isNode()){
-            var notify = require('./sendNotify');
-            await notify.sendNotify($.name, notifyBody );
-        }
-    } else {
-        console.log(notifyBody);
-    }
+async function SendMsg(message) {
+	if (!message)
+		return;
+
+	if (Notify > 0) {
+		if ($.isNode()) {
+			var notify = require('./sendNotify');
+			await notify.sendNotify($.name, message);
+		} else {
+			$.msg(message);
+		}
+	} else {
+		console.log(message);
+	}
 }
 
 //pushDear
