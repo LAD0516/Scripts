@@ -1,20 +1,28 @@
 /*
+ 
+教程自动签到  34 9,21 * * *
 
-get模版
+========= Quantumult X =========
 
-url script-request-header jiaocheng.js
-
-*/
-
+#教程
+hostname =  
+ url script-request-header jiaocheng.js
+  
+ */
 const $ = new Env('教程');
 let status;
-
+const Debug = 1;
 status = (status = ($.getval("jiaochengstatus") || "1")) > 1 ? `${status}` : "";
 
 const jiaochengurlArr = [], jiaochenghdArr = [], jiaochengcount = ''
 
 let jiaochengurl = $.getdata('jiaochengurl')
 let jiaochenghd = $.getdata('jiaochenghd')
+let DD = RT(2000, 3000)//随机延时
+let SJ = DD/1000
+let tz = ($.getval('tz') || '1');//通知
+$.message = ''
+
 !(async () => {
     if (typeof $request !== "undefined") {
 
@@ -52,21 +60,20 @@ if (!jiaochenghdArr[0]) {
                 jiaochenghd = jiaochenghdArr[i];
 
 
-                $.index = i + 1;
-                console.log(`\n\n开始【教程${$.index}】`)
+       $.index = i + 1;
+       console.log(`\n\n开始【第${$.index}个账号】`)
 
            //循环运行
            for (let c = 0; c < 10; c++) {
            $.index = c + 1
 
 
-          await jiaocheng()//你要执行的版块  
-          await $.wait(1000)//你要延迟的时间1000=1秒
-
-
-
+      $.log(`随机延时${SJ}秒`)
+           await $.wait(DD)
+           await jiaocheng()
 
                 }
+           message()
             }
         }
     }
@@ -87,7 +94,7 @@ function jiaochengck() {
         if (jiaochenghd) $.setdata(jiaochenghd, `jiaochenghd${status}`)
         $.log(jiaochenghd)
 
-        $.msg($.name, "", `教程${status}获取headers成功`)
+        $.msg($.name, "", `教程${status}获取CK成功`)
 
     }
 }
@@ -102,18 +109,31 @@ function jiaocheng(timeout = 0) {
         let url = {
             url: ``,
             headers: JSON.parse(jiaochenghd),
+            
         }
-
+		if (Debug) {
+			console.log(`\n【debug】=============== 这是请求 url ===============`);
+			console.log(JSON.stringify(url));
+		}
         $.get(url, async (err, resp, data) => {
             try {
-
+	    if (Debug) {
+		     console.log(`\n【debug】===============这是返回data==============`);
+					console.log(data)
+				}
                 data = JSON.parse(data)
 
                 if (data.status == 0) {
 
+            $.log(`签到成功：`)
+
+            $.msg +=(`签到成功：`)
 
                 } else {
 
+            $.log(`签到失败：`)
+
+            $.msg +=(`签到失败：`)
 
                 }
             } catch (e) {
@@ -126,8 +146,16 @@ function jiaocheng(timeout = 0) {
     })
 }
 
-
-
+//随机延时
+function RT(X, Y) {
+    do rt = Math.floor(Math.random() * Y);
+    while (rt < X)
+    return rt;
+}
+//通知
+function message() {
+    if(tz == 1){$.msg($.name,"",$.message)}
+}
 
 
 //env模块
