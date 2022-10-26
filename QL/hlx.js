@@ -1195,7 +1195,7 @@ url: `http://floor.huluxia.com/user/signin/ANDROID/4.0?platform=2&gkey=000000&ap
        console.log(`\n账号【${this.name}】签到成功：获得${result.experienceVal}经验，连续签到：${result.continueDays}天`)
 	  //msg += `\n账号【${this.name}】签到成功：获得${result.experienceVal}经验，连续签到：${result.continueDays}天\n`
             await $.wait(2000);
-            await this.qst(); 
+            await this.ggb(); 
         } else {
 	  console.log(`\n账号【${this.name}】签到失败：${result.msg}!`)
 	  msg += `\n账号【${this.name}】签到失败：${result.msg}!\n`
@@ -1224,7 +1224,7 @@ url: `http://floor.huluxia.com/user/signin/ANDROID/4.0?platform=2&gkey=000000&ap
        console.log(`\n账号【${this.name}】签到成功：获得${result.experienceVal}经验，连续签到：${result.continueDays}天`)
 	  //msg += `\n账号【${this.name}】签到成功：获得${result.experienceVal}经验，连续签到：${result.continueDays}天\n`
             await $.wait(2000);
-            await this.ggb(); 
+            await this.yjfk(); 
         } else {
 	  console.log(`\n账号【${this.name}】签到失败：${result.msg}!`)
 	  msg += `\n账号【${this.name}】签到失败：${result.msg}!\n`
@@ -1281,6 +1281,9 @@ url: `http://floor.huluxia.com/user/signin/ANDROID/4.0?platform=2&gkey=000000&ap
             if(result.status == 1) {
             this.jf =result.experienceVal
             this.zjf = this.jf*42
+
+       console.log(`\n账号【${this.name}】签到成功：获得${result.experienceVal}经验，连续签到：${result.continueDays}天\n`)
+
        console.log(`\n账号【${this.name}】签到成功：连续签到：${result.continueDays}天，总共获得${this.zjf}经验，当前等级：${this.dj}，当前经验：${this.exp}，还差：${this.jy}经验升级！`)
 	  msg += `\n账号【${this.name}】签到成功：连续签到：${result.continueDays}天，总共获得${this.zjf}经验，当前等级：${this.dj}，当前经验：${this.exp}，还差：${this.jy}经验升级！\n`
 
