@@ -1,2 +1,2 @@
 # Scripts
- 自用scripts
+ 自用圈x青龙scripts
