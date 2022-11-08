@@ -1,7 +1,7 @@
 /*
   GLaDOS-签到
   cron: 34 9,21 * * *
-
+  @GnA1J
   ========= 青龙 =========
   抓包搜索 user 把请求头的Cookie填到glados_ck中
   export glados_ck='xxx@xxx'
