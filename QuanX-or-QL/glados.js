@@ -67,6 +67,7 @@ if (Debug) {
             if(result.code == 0) {
             this.name = result.data.email
             this.days = result.data.leftDays/1
+            this.traffic =result.data.traffic/1000000000
             console.log(`账号【${this.name}】登录成功！`)
             msg += `账号【${this.name}】登录成功！\n`
             await $.wait(500);
@@ -108,8 +109,8 @@ if (Debug) {
                 console.log(`账号【${this.name}】签到成功，${result.message}！现有天数：${this.days}`)
                 msg += `账号【${this.name}】签到成功，${result.message}！现有天数：${this.days}\n`
         } else {
-            console.log(`账号【${this.name}】签到失败：${result.message}现有天数：${this.days}`)
-            msg += `账号【${this.name}】签到失败：${result.message}现有天数：${this.days}\n`
+            console.log(`账号【${this.name}】签到失败：${result.message}剩余天数：${this.days}，流量使用情况：${this.traffic}G/200G`)
+            msg += `账号【${this.name}】签到失败：${result.message}剩余天数：${this.days}，流量使用情况：${this.traffic}G/200G\n`
 
 				}
 
