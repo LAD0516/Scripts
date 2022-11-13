@@ -1,7 +1,7 @@
 /*
  * 支付宝挖矿-签到
- * cron: 34 9,21 * * *
- *
+ * cron: 0 0 * * *
+ * @GnA1J
  * ========= 青龙 =========
  * 抓包搜索 user 把请求头的Cookie填到zfbwk_ck中
  * export zfbwk_ck='xxx@xxx'
