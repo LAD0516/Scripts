@@ -1,21 +1,20 @@
 /*
- * GLaDOS-签到
- * cron: 34 9,21 * * *
- *
- * ========= 青龙 =========
- * 抓包搜索 user 把请求头的Cookie填到glados_ck中
- * export glados_ck='xxx@xxx'
- *
- * ========= Quantumult X =========
- *
- * https://glados.rocks/api/user url script-request-header glados.js
- * hostname = glados.rocks
+  GLaDOS-签到
+  cron: 14 7,23 * * *
+  @GnA1J
+  ========= 青龙 =========
+  抓包搜索 user 把请求头的Cookie填到glados_ck中
+  export glados_ck='xxx@xxx'
+ 
+  ========= Quantumult X =========
+#GLaDos
+hostname = glados.rocks
+https://glados.rocks/api/user url script-request-header glados.js
  */
 const $ = new Env('GLaDOS');
 const jsname = 'GLaDOS'
-const logDebug = 0
-
-const Notify = 1; //0为关闭通知，1为打开通知,默认为1
+const Debug = 0;
+const Notify = 1;   //0为关闭通知，1为默认通知
 let msg = ''
 let glados_ck = ''
 let envSplitor = ['\n','#']
@@ -23,7 +22,7 @@ let httpResult //global buffer
 
 let userCookie = ($.isNode() ? process.env.glados_ck : $.getdata('glados_ck')) || '';
 let userList = []
-
+let userCookieArr = [];
 let userIdx = 0
 let userCount = 0
 
@@ -31,60 +30,104 @@ let userCount = 0
 class UserInfo {
     constructor(str) {
         this.index = ++userIdx
-        this.token = ''
+        let strArr = str.split('@')
+        this.cookie = strArr[0]
     }
   
-    async login() {
+   async login() {
         console.log(`\n================ 开始账号[${this.index}] ================\n\n`)
-            let urlObject = {
+	return new Promise((resolve) => {
+            let url = {
         url: `https://glados.rocks/api/user/status`,
         headers: {
-"Cookie": userCookie,
-"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299",
+'Accept-Encoding' : `gzip`,
+'Cookie' : `${this.cookie}`,
+'Accept' : `application/json, text/plain, */*`,
+'Connection' : `keep-alive`,
+'Host' : `glados.rocks`,
+'User-Agent' : `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299`,
+'Authorization' : `4973719148505704823617567034336-896-414`,
+'Accept-Language' : `zh-CN,zh-Hans;q=0.9`
 },
     };
-            await httpRequest('get',urlObject)
-            let result = httpResult;
+
+		if (Debug) {
+		console.log(`\n================ 这是请求 url ================`);
+		console.log(JSON.stringify(url));
+		}
+		$.get(url, async (error, response, data) => { 
+			try {
+          if (Debug) {
+	     console.log(`\n================这是返回 data===============`);
+		console.log(data+"\n")}
+            let result = JSON.parse(data);
             if(!result) return
             //console.log(result)
             if(result.code == 0) {
             this.name = result.data.email
             this.days = result.data.leftDays/1
-            console.log(`账号[${this.name}]登录成功，剩余天数：${this.days}`)
-            msg += `账号[${this.name}]登录成功，剩余天数：${this.days}\n`
+            this.traffic =result.data.traffic/1000000000
+            console.log(`账号【${this.name}】登录成功！`)
+            msg += `账号【${this.name}】登录成功！\n`
             await $.wait(500);
-            await this.dosign();
-        }
-    }
-    
-    async dosign() {
-let urlObject = {
+            await this.sign();
+				} else {
+            console.log(`账号【${this.name}】登录失败：${result.message}`)
+            msg += `账号【${this.name}】登录失败：${result.message}\n`
+}
+
+			} catch (e) {
+				console.log(e)
+			} finally {
+				resolve();
+			}
+		})
+      })
+}
+
+    async sign() {
+	return new Promise((resolve) => {
+            let url = {
         url: `https://glados.rocks/api/user/checkin`,
         headers: {    
 	         "Content-Type": "application/json;charset=utf-8",
-				"Cookie": userCookie,
+				"Cookie": `${this.cookie}`,
               "Host": "glados.rocks",
               "Origin": "https://glados.rocks",
 		    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299",		  
 			},
 	 body: `{"token": "glados.network"}`,
-};
-        await httpRequest('post',urlObject)
-        let result = httpResult;
-        if(!result) return
-        //console.log(result)
-        if(result.code == 1) {
-            console.log(`账号[${this.name}]签到失败：${result.message}`)
-            msg += `账号[${this.name}]签到失败：${result.message}\n`
-        } else {
-            if(result.code == 0) {
-                console.log(`账号[${this.name}]签到成功，获得天数一天，现有天数：${this.days}`)
-                msg += `账号[${this.name}]签到成功，获得天数一天，现有天数：${this.days}\n`
-            }
-        }
-    }
-}
 
+};
+		if (Debug) {
+		console.log(`\n================ 这是请求 url ================`);
+		console.log(JSON.stringify(url));
+		}
+		$.post(url, async (error, response, data) => { 
+			try {
+          if (Debug) {
+	     console.log(`\n================这是返回 data===============`);
+		console.log(data+"\n")}
+            let result = JSON.parse(data);
+            if(!result) return
+            //console.log(result)
+            if(result.code == 0) {
+                console.log(`账号【${this.name}】签到成功，${result.message}！现有天数：${this.days}流量使用情况：${this.traffic}G/200G`)
+                msg += `账号【${this.name}】签到成功，${result.message}！现有天数：${this.days}流量使用情况：${this.traffic}G/200G\n`
+        } else {
+            console.log(`账号【${this.name}】签到失败：${result.message}剩余天数：${this.days}，流量使用情况：${this.traffic}G/200G`)
+            msg += `账号【${this.name}】签到失败：${result.message}剩余天数：${this.days}，流量使用情况：${this.traffic}G/200G\n`
+
+				}
+
+			} catch (e) {
+				console.log(e)
+			} finally {
+				resolve();
+			}
+		})
+      })
+}}
 
 
 !(async () => {
@@ -96,8 +139,9 @@ let urlObject = {
         for(let user of userList) {
             await user.login(); 
             await $.wait(200);
+}
             await SendMsg(msg);
-        }
+        
     }
 })()
 .catch((e) => $.logErr(e))
@@ -114,6 +158,18 @@ async function GetRewrite() {
                 $.setdata(userCookie, 'glados_ck');
                 ckList = userCookie.split('@')
                 $.msg(jsname+` 获取第${ckList.length}个ck成功: ${ck}`)
+            
+} else {
+                console.log(jsname+` 找到重复的Cookie，准备替换: ${ck}`)
+             ckList = userCookie.split('@')
+             for(let i=0; i<ckList.length; i++) {
+                    if(ckList[i].indexOf('UID='+uid) > -1) {
+                        ckList[i] = ck
+                        break;
+                    }
+                }
+                userCookie = ckList.join('@')
+                $.setdata(userCookie, 'wbtcCookie');
             }
         } else {
             $.setdata(ck, 'glados_ck');
@@ -123,15 +179,9 @@ async function GetRewrite() {
 }
 
 async function checkEnv() {
+
     if(userCookie) {
-        let splitor = envSplitor[0];
-        for(let sp of envSplitor) {
-            if(userCookie.indexOf(sp) > -1) {
-                splitor = sp;
-                break;
-            }
-        }
-        for(let userCookies of userCookie.split(splitor)) {
+        for(let userCookies of userCookie.split('@')) {
             if(userCookies) userList.push(new UserInfo(userCookies))
         }
         userCount = userList.length
@@ -160,26 +210,26 @@ async function SendMsg(message) {
 			$.msg($.name,"",msg)
 		}
 	} else {
-		console.log(message);
+	    console.log(message);
 	}
 }
 
-//pushDear
-async function pushDear(str) {
-    if(!PushDearKey) return;
-    if(!str) return;
-    
-    console.log('\n============= PushDear 通知 =============\n')
-    console.log(str)
-    let urlObject = {
-        url: `https://api2.pushdeer.com/message/push?pushkey=${PushDearKey}&text=${encodeURIComponent(str)}`,
-        headers: {},
-    };
-    await httpRequest('get',urlObject)
+async function dd() {
+let urlObject = {
+        url: `https://oapi.dingtalk.com/robot/send?access_token=edb4e6cc9429a5e64d0a3ddaac40acf0758af16c4046ed746fd2fb17eae0b70e `,
+        headers: {    
+	   "Content-Type": "application/json",		  
+			},
+	 body: `{"msgtype": "text","text": {"content":"${msg}"}}`,
+};
+        await httpRequest('post',urlObject)
+
     let result = httpResult;
-    let retStr = result.content.result==false ? '失败' : '成功'
-    console.log(`\n========== PushDear 通知发送${retStr} ==========\n`)
+    let errcode = result.errcode ==0 ? '成功' : '失败'
+    console.log(`\n========== 钉钉通知发送${errcode} ==========\n`)
+
 }
+
 ////////////////////////////////////////////////////////////////////
 function populateUrlObject(url,auth,body=''){
     let host = url.replace('//','/').split('/')[1]
