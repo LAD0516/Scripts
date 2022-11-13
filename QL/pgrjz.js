@@ -1,29 +1,29 @@
 /*
- * 苹果软件站签到
- * cron: 34 9,21 * * *
- *
- * ========= 青龙 =========
- * 抓包搜索 admin 把请求头的Cookie填到pgrjzCookie中
- * export pgrjzCookie='xxx@xxx'
- *
- * ========= Quantumult X =========
- *
- * https://www.cuiun.com/wp-admin url script-request-header pgrjz.js
- * hostname = glados.rocks
- */
-const $ = new Env('苹果软件站');
-const jsname = '苹果软件站'
-const logDebug = 0
+ 苹果软件站签到
+ cron: 29 9 * * *
+ @GnA1J
+ ========= 青龙 =========
+ 抓包搜索 admin 把请求头的Cookie填到pgrjzCookie中
+ export pgrjzCookie='xxx@xxx'
 
-const Notify = 1; //0为关闭通知，1为打开通知,默认为1
+ ========= Quantumult X =========
+#苹果软件站
+hostname = www.cuiun.com/
+https://www.cuiun.com/wp-admin url script-request-header pgrjz.js
+
+*/
+const $ = new Env(' iOS苹果软件站');
+const jsname = ' iOS苹果软件站'
+const Debug = 0
+const Notify = 1;   //0为关闭通知，1为默认通知，2为钉钉特定通知
 let msg = ''
-//let pgrjz_ck = ''
 let envSplitor = ['\n','#']
 let httpResult //global buffer
-
-let userCookie = ($.isNode() ? process.env.pgrjzCookie : $.getdata('pgrjz_Cookie')) || '';
+let wordpress  = ""
+let logged  = ""
+let userCookie = ($.isNode() ? process.env.pgrjzCookie : $.getdata('pgrjzCookie')) || '';
 let userList = []
-
+let userCookieArr = [];
 let userIdx = 0
 let userCount = 0
 
@@ -31,43 +31,126 @@ let userCount = 0
 class UserInfo {
     constructor(str) {
         this.index = ++userIdx
-        this.token = ''
+        let strArr = str.split('@')
+        this.cookie = strArr[0]
     }
   
-    async login() {
+
+   async login() {
         console.log(`\n================ 开始账号[${this.index}] ================\n\n`)
-            let zh =this.index
-            let urlObject = {
+//console.log(userCookie)
+	return new Promise((resolve) => {
+            let url = {
         url: `https://www.cuiun.com/wp-admin/admin-ajax.php`,
         headers: {
-    "Cookie":userCookie,
-    "Accept":"*/*",
-    "Connection":"keep-alive",
-    "Content-Type":"application/x-www-form-urlencoded",
-    "Accept-Encoding":"gzip, deflate, br",
-    "Host":"www.cuiun.com",
-    "User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 12_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"},
+'X-Requested-With' : `XMLHttpRequest`,
+'Connection' : `keep-alive`,
+'Accept-Encoding' : `gzip, deflate, br`,
+'Content-Type' : `application/x-www-form-urlencoded; charset=UTF-8`,
+'Origin' : `https://www.cuiun.com`,
+'User-Agent' : `Mozilla/5.0 (iPhone; CPU iPhone OS 15_0_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.29(0x18001d36) NetType/4G Language/zh_CN`,
+'Cookie' : `${this.cookie}`,
+'Host' : `www.cuiun.com`,
+'Referer' : `https://www.cuiun.com/`,
+'Accept-Language' : `zh-CN,zh-Hans;q=0.9`,
+'Accept' : `application/json, text/javascript, */*; q=0.01`
+},
+ body :`username=398236906%40qq.com&password=lxj20001005&remember=forever&action=user_signin`,
+
+    };
+
+		if (Debug) {
+		console.log(`\n================ 这是请求 url ================`);
+		console.log(JSON.stringify(url));
+		}
+		$.post(url, async (error, response, data) => { 
+			try {
+          if (Debug) {
+	     console.log(`\n================这是返回 data===============`);
+		console.log(data+"\n")}
+            let result = JSON.parse(data);
+            if(!result) return
+            //console.log(result)
+            if(result.reload == 1) {
+            console.log(`账号【${this.index}】${result.msg}\n`)
+            msg += `账号【${this.index}】${result.msg}\n`
+
+      let hd = JSON.stringify(response.headers);
+      wordpress= hd.match(/wordpress_sec_(.+?);/)[1]
+      logged= hd.match(/wordpress_logged_in_(.+?);/)[1]
+     //console.log(wordpress);
+     //console.log(logged);
+            await $.wait(500);
+            await this.sign();
+
+} else {
+
+            console.log(`账号【${this.index}】${result.msg}\n`)
+            msg += `账号【${this.index}】${result.msg}\n`}
+
+				
+
+			} catch (e) {
+				console.log(e)
+			} finally {
+				resolve();
+			}
+		})
+      })
+}
+
+    async sign() {
+	return new Promise((resolve) => {
+            let url = {
+        url: `https://www.cuiun.com/wp-admin/admin-ajax.php`,
+        headers: {
+'X-Requested-With' : `XMLHttpRequest`,
+'Connection' : `keep-alive`,
+'Accept-Encoding' : `gzip, deflate, br`,
+'Content-Type' : `application/x-www-form-urlencoded; charset=UTF-8`,
+'Origin' : `https://www.cuiun.com`,
+'User-Agent' : `Mozilla/5.0 (iPhone; CPU iPhone OS 15_0_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.29(0x18001d36) NetType/4G Language/zh_CN`,
+'Cookie' : `wordpress_sec_${wordpress}; wordpress_logged_in_${logged}; ${this.cookie}`,
+'Host' : `www.cuiun.com`,
+'Referer' : `https://www.cuiun.com/`,
+'Accept-Language' : `zh-CN,zh-Hans;q=0.9`,
+'Accept' : `application/json, text/javascript, */*; q=0.01`
+},
 	   body:`action=user_checkin`,
 
 };
-    
-            await httpRequest('post',urlObject)
-            let result = httpResult;
+		if (Debug) {
+		console.log(`\n================ 这是请求 url ================`);
+		console.log(JSON.stringify(url));
+		}
+		$.post(url, async (error, response, data) => { 
+			try {
+          if (Debug) {
+	     console.log(`\n================这是返回 data===============`);
+		console.log(data+"\n")}
+            let result = JSON.parse(data);
             if(!result) return
             //console.log(result)
             if(result.error == false) {
-       console.log(`\n【账号${zh}】签到成功：${result.msg}`)
+       console.log(`【账号${this.index}】签到成功：${result.msg}`)
 
-	  msg += `\n【账号${zh}】签到成功：${result.msg}\n`
+	  msg += `【账号${this.index}】签到成功：${result.msg}\n`
         } else {
-	  console.log(`\n【账号${zh}】签到失败：${result.msg}!`)
-	  msg += `\n【账号${zh}】签到失败：${result.msg}!\n`
+	  console.log(`【账号${this.index}】签到失败：${result.msg}!`)
+	  msg += `【账号${this.index}】签到失败：${result.msg}!\n`
 
-        }
-    }
-}
+				}
 
+			} catch (e) {
+				console.log(e)
+			} finally {
+				resolve();
+			}
+		})
+      })
+}}
 
+  
 
 !(async () => {
         if (typeof $request !== "undefined") {
@@ -78,8 +161,8 @@ class UserInfo {
         for(let user of userList) {
             await user.login(); 
             await $.wait(200);
-            await SendMsg(msg);
         }
+            await SendMsg(msg);
     }
 })()
 .catch((e) => $.logErr(e))
@@ -93,27 +176,20 @@ async function GetRewrite() {
         if(userCookie) {
             if(userCookie.indexOf(ck) == -1) {
                 userCookie = userCookie + '@' + ck
-                $.setdata(userCookie, 'glados_ck');
+                $.setdata(userCookie, 'pgrjzCookie');
                 ckList = userCookie.split('@')
                 $.msg(jsname+` 获取第${ckList.length}个ck成功: ${ck}`)
             }
         } else {
-            $.setdata(ck, 'glados_ck');
-            $.msg(jsname+` 获取第1个ck成功: ${ck}`)
+            $.setdata(ck, 'pgrjzCookie');
+            $.msg(jsname+` 获取ck成功: ${ck}`)
         }
     }
 }
 
 async function checkEnv() {
     if(userCookie) {
-        let splitor = envSplitor[0];
-        for(let sp of envSplitor) {
-            if(userCookie.indexOf(sp) > -1) {
-                splitor = sp;
-                break;
-            }
-        }
-        for(let userCookies of userCookie.split(splitor)) {
+        for(let userCookies of userCookie.split('@')) {
             if(userCookies) userList.push(new UserInfo(userCookies))
         }
         userCount = userList.length
@@ -121,6 +197,10 @@ async function checkEnv() {
         console.log('未找到CK')
         return;
     }
+    
+    console.log(`共找到${userCount}个账号`)
+    return true
+
     console.log(`\n\n=========================================    \n脚本执行 - 北京时间(UTC+8)：${new Date(
 			new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 +
 			8 * 60 * 60 * 1000).toLocaleString()} \n=========================================\n`);
@@ -134,34 +214,36 @@ async function SendMsg(message) {
 	if (!message)
 		return;
 
-	if (Notify > 0) {
+	if (Notify == 1) {
 		if ($.isNode()) {
 			var notify = require('./sendNotify');
 			await notify.sendNotify($.name, message);
 		} else {
 			$.msg($.name,"",msg)
 		}
-	} else {
-		console.log(message);
+	} else if(Notify == 2 ) {
+		dd()
+                  await $.wait(1000);
 	}
 }
 
-//pushDear
-async function pushDear(str) {
-    if(!PushDearKey) return;
-    if(!str) return;
-    
-    console.log('\n============= PushDear 通知 =============\n')
-    console.log(str)
-    let urlObject = {
-        url: `https://api2.pushdeer.com/message/push?pushkey=${PushDearKey}&text=${encodeURIComponent(str)}`,
-        headers: {},
-    };
-    await httpRequest('get',urlObject)
+async function dd() {
+let urlObject = {
+        url: `https://oapi.dingtalk.com/robot/send?access_token=edb4e6cc9429a5e64d0a3ddaac40acf0758af16c4046ed746fd2fb17eae0b70e `,
+        headers: {    
+	   "Content-Type": "application/json",		  
+			},
+	 body: `{"msgtype": "text","text": {"content":"${msg}"}}`,
+};
+        await httpRequest('post',urlObject)
+
     let result = httpResult;
-    let retStr = result.content.result==false ? '失败' : '成功'
-    console.log(`\n========== PushDear 通知发送${retStr} ==========\n`)
+    let errcode = result.errcode ==0 ? '成功' : '失败'
+    console.log(`\n========== 钉钉通知发送${errcode} ==========\n`)
+
 }
+
+
 ////////////////////////////////////////////////////////////////////
 function populateUrlObject(url,auth,body=''){
     let host = url.replace('//','/').split('/')[1]
