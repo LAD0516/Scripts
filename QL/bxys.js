@@ -1,29 +1,30 @@
 /*
   白象优食签到
-  cron: 34 9,21 * * *
+  cron: 27 9 * * *
  
- ========= 青龙 =========
+  ========= 青龙 =========
   抓包搜索 user 把请求头的Authori-zation填到bxysCookie中
   export bxysCookie='xxx@xxx'
  
- ========= Quantumult X =========
+  ========= Quantumult X =========
+#白象优食
+hostname = apiv2.zlyjlife.com
+https://apiv2.zlyjlife.com/customer/api/front/user/sign url script-request-header bxys.js
  
- https://apiv2.zlyjlife.com/customer/api/front/user url script-request-header bxys.js
- 
- hostname = apiv2.zlyjlife.com
  */
 const $ = new Env(' 白象优食');
 const jsname = ' 白象优食'
-const logDebug = 1
+const logDebug = 0
 
 const Notify = 1; //0为关闭通知，1为打开通知,默认为1
 let msg = ''
+//let bxys_ck = ''
 let envSplitor = ['\n','#']
 let httpResult //global buffer
 
 let userCookie = ($.isNode() ? process.env.bxysCookie : $.getdata('bxysCookie')) || '';
 let userList = []
-
+let userCookieArr = [];
 let userIdx = 0
 let userCount = 0
 
@@ -31,27 +32,26 @@ let userCount = 0
 class UserInfo {
     constructor(str) {
         this.index = ++userIdx
+        let strArr = str.split('@')
+        this.cookie = strArr[0]
     }
 
     async login() {
-            let zh =this.index
+console.log(userCookie)
             let urlObject = {
         url: `https://apiv2.zlyjlife.com/customer/api/front/user/sign/user`,
         headers: {
-'Accept' : `*/*`,
-'Accept-Encoding' : `gzip,compress,br,deflate`,
-'Appid' : `wxf38ec41402b6ca5e`,
-'Content-Type' : `application/json`,
-'Referer' : `https://servicewechat.com/wxf38ec41402b6ca5e/91/page-frame.html`,
-'Host' : `apiv2.zlyjlife.com`,
-'Authori-zation' : userCookie,
-'Accept-Language' : `zh-CN,zh-Hans;q=0.9`,
-'User-Agent' : `Mozilla/5.0 (iPhone; CPU iPhone OS 15_0_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.22(0x18001627) NetType/4G Language/zh_CN`,
-'Connection' : `keep-alive`
+	"Accept-Encoding": "gzip,compress,br,deflate",
+	"Connection": "keep-alive",
+	"Appid": "wxf38ec41402b6ca5e",
+	"Content-Type": "application/json",
+	"Authori-zation": `${this.cokkie}`,
+	"Host": "apiv2.zlyjlife.com",
+	"Content-Length": "44",
+	"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.29(0x18001d37) NetType/4G Language/zh_CN",
+	"Referer": "https://servicewechat.com/wxf38ec41402b6ca5e/103/page-frame.html"
 },
-
-
-	   body: `{"all":0,"integral":0,"sign":1,"trackId":-1}`,
+	   body: `{"all": 0,"integral": 0,"sign": 1,"trackId": -1}`,
 
     };
             await httpRequest('post',urlObject)
@@ -61,27 +61,28 @@ class UserInfo {
             if(result.code == 200) {
             this.name = result.data.uid
             this.days = result.data.sumSignDay
-            var jf = result.data.sumIntegral
-            console.log(`【账号${zh}】签到天数：${this.days}，剩余积分：${jf}`)
-            msg += `【账号${zh}】签到天数：${this.days}，剩余积分：${jf}\n`
+            this.jf = result.data.sumIntegral
+            console.log(`【账号${this.index}】签到天数：${this.days}，剩余积分：${this.jf}`)
+            msg += `【账号${this.index}】签到天数：${this.days}，剩余积分：${this.jf}\n`
 
-        } else {
-           console.log(`失败${result.message}`)}
+        }
     }
   
     async dosign() {
         console.log(`\n================ 开始账号[${this.index}] ================\n\n`)
-            let zh =this.index
             let urlObject = {
         url: `https://apiv2.zlyjlife.com/customer/api/front/user/sign/integral?trackId=-1`,
         headers: {
-    "Connection":"keep-alive",
-    "Appid":"wxf38ec41402b6ca5e",
-    "Authori-zation": userCookie,
-    "Content-Type":"application/x-www-form-urlencoded",
-    "Accept-Encoding":"gzip,compress,br,deflate",
-    "Host":"apiv2.zlyjlife.com",
-    "User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 15_0_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.22(0x18001627) NetType/4G Language/zh_CN"},
+	"Accept-Encoding": "gzip,compress,br,deflate",
+	"Connection": "keep-alive",
+	"Appid": "wxf38ec41402b6ca5e",
+	"Content-Type": "application/json",
+	"Authori-zation": `${this.cokkie}`,
+	"Host": "apiv2.zlyjlife.com",
+	"Content-Length": "44",
+	"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.29(0x18001d37) NetType/4G Language/zh_CN",
+	"Referer": "https://servicewechat.com/wxf38ec41402b6ca5e/103/page-frame.html"
+},
 
 };
     
@@ -90,17 +91,15 @@ class UserInfo {
             if(!result) return
             //console.log(result)
             if(result.code == 200) {
-       console.log(`\n【账号${zh}】签到成功：${result.data.title}签到，获得${result.data.experience}积分！`)
+       console.log(`\n【账号${this.index}】签到成功：${result.data.title}签到，获得${result.data.experience}积分，剩余积分：${result.data.integral}积分`)
 
-	  msg += `\n【账号${zh}】签到成功：${result.data.title}签到，获得${result.data.experience}积分！\n`
-            await $.wait(500);
-            await this.login();
+	  msg += `\n【账号${this.index}】签到成功：${result.data.title}签到，获得${result.data.experience}积分，剩余积分：${result.data.integral}积分\n`
         } else {
-	  console.log(`\n【账号${zh}】签到失败：${result.message}!`)
-	  msg += `\n【账号${zh}】签到失败：${result.message}!\n`
+	  console.log(`\n【账号${this.index}】签到失败：${result.message}!`)
+	  msg += `\n【账号${this.index}】签到失败：${result.message}!\n`
+        }
             await $.wait(500);
             await this.login();
-        }
     }
 }
 
@@ -124,7 +123,7 @@ class UserInfo {
 ///////////////////////////////////////////////////////////////////
 async function GetRewrite() {
     if($request.url.indexOf(`user`) > -1) {
-        let ck = $request.headers.Authori-zation
+        let ck = JSON.stringify($request.headers)
         
         if(userCookie) {
             if(userCookie.indexOf(ck) == -1) {
@@ -150,9 +149,6 @@ async function checkEnv() {
         console.log('未找到CK')
         return;
     }
-    
-    console.log(`共找到${userCount}个账号`)
-    return true
 
     console.log(`\n\n=========================================    \n脚本执行 - 北京时间(UTC+8)：${new Date(
 			new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 +
