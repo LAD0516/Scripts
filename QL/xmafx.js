@@ -1,7 +1,7 @@
 /*
  熊猫爱分享签到
- cron: 34 9,21 * * *
-
+ cron: 34 21 * * *
+ @GnA1J
  ========= 青龙 =========
  抓包搜索 admin 把请求头的Cookie填到xmafxCookie中
  export xmafxCookie='xxx@xxx'
@@ -14,17 +14,16 @@ https://www.wanbianios.com/wp-admin url script-request-header xmafx.js
 */
 const $ = new Env(' iOS熊猫爱分享');
 const jsname = ' iOS熊猫爱分享'
-const logDebug = 0
-
+const Debug = 0
 const Notify = 1; //0为关闭通知，1为打开通知,默认为1
 let msg = ''
-//let xmafx_ck = ''
 let envSplitor = ['\n','#']
 let httpResult //global buffer
-
+let wordpress  = ""
+let logged  = ""
 let userCookie = ($.isNode() ? process.env.xmafxCookie : $.getdata('xmafxCookie')) || '';
 let userList = []
-
+let userCookieArr = [];
 let userIdx = 0
 let userCount = 0
 
@@ -32,16 +31,80 @@ let userCount = 0
 class UserInfo {
     constructor(str) {
         this.index = ++userIdx
-        this.token = ''
+        let strArr = str.split('@')
+        this.cookie = strArr[0]
     }
   
-    async login() {
+
+   async login() {
         console.log(`\n================ 开始账号[${this.index}] ================\n\n`)
-            let zh =this.index
-            let urlObject = {
+//console.log(userCookie)
+	return new Promise((resolve) => {
+            let url = {
         url: `https://www.wanbianios.com/wp-admin/admin-ajax.php`,
         headers: {
-    "Cookie":userCookie,
+'X-Requested-With' : `XMLHttpRequest`,
+'Connection' : `keep-alive`,
+'Accept-Encoding' : `gzip, deflate, br`,
+'Content-Type' : `application/x-www-form-urlencoded; charset=UTF-8`,
+'Origin' : `https://www.wanbianios.com`,
+'User-Agent' : `Mozilla/5.0 (iPhone; CPU iPhone OS 15_0_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1`,
+'Cookie' : `${this.cookie}`,
+'Host' : `www.wanbianios.com`,
+'Referer' : `https://www.wanbianios.com/`,
+'Accept-Language' : `zh-CN,zh-Hans;q=0.9`,
+'Accept' : `*/*`
+},
+ body :`action=user_login&username=398236906%40qq.com&password=lxj20001005`,
+
+    };
+
+		if (Debug) {
+		console.log(`\n================ 这是请求 url ================`);
+		console.log(JSON.stringify(url));
+		}
+		$.post(url, async (error, response, data) => { 
+			try {
+          if (Debug) {
+	     console.log(`\n================这是返回 data===============`);
+		console.log(data+"\n")}
+            let result = JSON.parse(data);
+            if(!result) return
+            //console.log(result)
+            if(result.status == 1) {
+            console.log(`【账号${this.index}】${result.msg}\n`)
+            msg += `【账号${this.index}】${result.msg}\n`
+
+      let hd = JSON.stringify(response.headers);
+      wordpress= hd.match(/wordpress_(.+?);/)[1]
+      logged= hd.match(/wordpress_logged_in_(.+?);/)[1]
+     //console.log(wordpress);
+     //console.log(logged);
+            await $.wait(500);
+            await this.sign();
+
+} else {
+
+            console.log(`【账号${this.index}】${result.msg}\n`)
+            msg += `【账号${this.index}】${result.msg}\n`
+
+				}
+
+			} catch (e) {
+				console.log(e)
+			} finally {
+				resolve();
+			}
+		})
+      })
+}
+
+    async sign() {
+	return new Promise((resolve) => {
+            let url = {
+        url: `https://www.wanbianios.com/wp-admin/admin-ajax.php`,
+        headers: {
+    "Cookie":`wordpress_${wordpress}; wordpress_logged_in_${logged}; PHPSESSID=o4t59qeaefg635f1f42e6vav3v; cao_notice_cookie=1`,
     "Accept":"*/*",
     "Connection":"keep-alive",
     "Content-Type":"application/x-www-form-urlencoded; charset=UTF-8",
@@ -51,24 +114,38 @@ class UserInfo {
 	   body:`action=user_qiandao`,
 
 };
-    
-            await httpRequest('post',urlObject)
-            let result = httpResult;
+		$.post(url, async (error, response, data) => { 
+          if (Debug) {
+		console.log(`\n================ 这是请求 url ================`);
+		console.log(JSON.stringify(url));
+		}
+			try {
+          if (Debug) {
+	     console.log(`\n================这是返回 data===============`);
+		console.log(data+"\n")}
+            let result = JSON.parse(data);
             if(!result) return
             //console.log(result)
             if(result.status == 1) {
-       console.log(`\n【账号${zh}】签到成功：${result.msg}`)
+       console.log(`【账号${this.index}】签到成功：${result.msg}`)
 
-	  msg += `\n【账号${zh}】签到成功：${result.msg}\n`
+	  msg += `【账号${this.index}】签到成功：${result.msg}\n`
         } else {
-	  console.log(`\n【账号${zh}】签到失败：${result.msg}!`)
-	  msg += `\n【账号${zh}】签到失败：${result.msg}!\n`
+	  console.log(`【账号${this.index}】签到失败：${result.msg}!`)
+	  msg += `【账号${this.index}】签到失败：${result.msg}!\n`
 
-        }
-    }
-}
+				}
 
+			} catch (e) {
+				console.log(e)
+			} finally {
+				resolve();
+			}
+		})
+      })
+}}
 
+  
 
 !(async () => {
         if (typeof $request !== "undefined") {
@@ -123,8 +200,6 @@ async function checkEnv() {
 			new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 +
 			8 * 60 * 60 * 1000).toLocaleString()} \n=========================================\n`);
 
-    console.log(`共找到${userCount}个账号`)
-    return true
 }
 
 //通知
