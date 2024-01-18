@@ -1,30 +1,31 @@
 /*
- * 掌上穿越火线签到
- * cron: 34 9,21 * * *
- *
- * ========= 青龙 =========
- * 抓包搜索 user 把请求头的Authori-zation填到cfmCookie中
- * export cfmCookie='xxx@xxx'
- *
- * ========= Quantumult X =========
- *
- * https://apiv2.zlyjlife.com/customer/api/front/user url script-request-header cfm.js
- *
- * hostname = apiv2.zlyjlife.com
- */
-const $ = new Env(' 掌上穿越火线');
-const jsname = ' 掌上穿越火线'
-const logDebug = 0
+  掌上穿越火线签到
+  cron: 21 9 * * *
+  @GnA1J
+  ========= 青龙 =========
+  抓包搜索'getScore'把整个url填到cfmCookie中
+  export cfmCookie='xxx@xxx'
+ 
+  ========= Quantumult X =========
+  打开我的积分获取Cookie
+#掌上穿越火线
+hostname = mwegame.qq.com
 
-const Notify = 1;   //0为关闭通知，1为默认通知，2为钉钉特定
+https://mwegame.qq.com/cfip/score_sign url script-request-header cfm.js
+
+ */
+const $ = new Env('掌上穿越火线');
+const jsname = '掌上穿越火线'
+const Debug = 0;
+const Notify = 1;   //0为关闭通知，1为默认通知
 let msg = ''
-let zh = ''
+let cfmCookie = ''
 let envSplitor = ['\n','#']
 let httpResult //global buffer
 
 let userCookie = ($.isNode() ? process.env.cfmCookie : $.getdata('cfmCookie')) || '';
 let userList = []
-
+let userCookieArr = [];
 let userIdx = 0
 let userCount = 0
 
@@ -32,68 +33,113 @@ let userCount = 0
 class UserInfo {
     constructor(str) {
         this.index = ++userIdx
-        zh =this.index
+        let strArr = str.split('@')
+        this.cookie = strArr[0]
+        this.url = this.cookie.match(/getScore?(.+)/)[1]
+        this.access_token = this.url.match(/accessToken=(.+?)&/)[1]
+        this.openid = this.url.match(/appOpenid=(.+?)&/)[1]
+        this.uin = this.url.match(/uin=(.+?)&/)[1]
+       //console.log(this.uin)
 
     }
+  
+   async login() {
 
-    async login() {
-            let urlObject = {
-        url: `https://mwegame.qq.com/cfip/score_sign/getScore?serverName=&appid=1101817502&areaName=%E6%89%8BQ-%E8%8B%B9%E6%9E%9C&roleName=%E6%9E%AA%E7%A8%B3%E4%B8%8D%E5%A6%82%E4%BD%A0%E7%9A%84%E5%90%BB&openid=C2CFEB4F48B246BB401C8E363DFB1E63&gameName=%E6%9E%AA%E6%88%98%E7%8E%8B%E8%80%85&nickname=%E3%85%A4&isMainRole=0&appOpenid=141568C17C66921ED2012FACD0F98059&roleId=1074364104&areaId=3&toUin=398236906&roleJob=%E5%B7%85%E5%B3%B0%E5%A4%A7%E5%85%83%E9%A6%96&serverId=0&accessToken=303762A5AA80C2EDED475C47506CF298&gameId=20003&subGameId=20003&token=DMzdHZMn&cGameId=1001&uniqueRoleId=3532317023&toOpenid=C2CFEB4F48B246BB401C8E363DFB1E63&acctype=qc&avatar=http%3A%2F%2Fq.qlogo.cn%2Fqqapp%2F1104466820%2F25FE014E0066491B348072AD541426E8%2F100%3Flevel=%2Fl%2F199c%2F91.png&accType=qc&uin=398236906&roleLevel=106&userId=559621728`,
+	return new Promise((resolve) => {
+            let url = {
+        url: `https://mwegame.qq.com/cfip/score_sign/getScore?${this.url}`,
         headers: {
-    "Connection":"keep-alive",
-    "Referer":userCookie,
-    "Content-Type":"application/x-www-form-urlencoded",
-    "Accept-Encoding":"gzip, deflate, br",
-    "Host":"mwegame.qq.com",
-    "User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 15_0_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 GH_QQConnect GameHelper_1001/3.10.30105.2103100105"},
-
+	"Cookie": `access_token=${this.access_token}; acctype=qc; appid=1101817502; openid=${this.openid}; accessToken=${this.access_token}; appId=1101817502; appOpenId=${this.openid}; appOpenid=${this.openid}; openId=${this.openid}; uin=${this.uin}; PHPSESSID=llq4miaovfr14m1kilq4lof8ga; access_token=${this.access_token}; acctype=qc; appid=1101817502; openid=${this.openid}`,
+	"Accept": "application/json",
+	"Accept-Encoding": "gzip, deflate, br",
+	"Referer": `https://mwegame.qq.com/helper/cfip/score/index.html?${this.url}`,
+	"Connection": "keep-alive",
+	"Host": "mwegame.qq.com",
+	"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 GH_QQConnect GameHelper_1001/3.10.30105.2103100105",
+	"Accept-Language": "zh-CN,zh-Hans;q=0.9",
+	"X-Requested-With": "XMLHttpRequest"
+},
     };
-            await httpRequest('get',urlObject)
-            let result = httpResult;
+
+		if (Debug) {
+		console.log(`\n================ 这是请求 url ================`);
+		console.log(JSON.stringify(url));
+		}
+		$.get(url, async (error, response, data) => { 
+			try {
+          if (Debug) {
+	     console.log(`\n================这是返回 data===============`);
+		console.log(data+"\n")}
+            let result = JSON.parse(data);
             if(!result) return
             //console.log(result)
             if(result.status == 0) {
-            console.log(`\n账号【${zh}】剩余：${result.data.score}积分`)
-            msg += `\n账号【${zh}】剩余：${result.data.score}积分\n`
+            console.log(`\n账号【${this.index}】剩余：${result.data.score}积分`)
+            msg += `\n账号【${this.index}】剩余：${result.data.score}积分\n`
         } else {
             msg += result.msg
     }
+
+
+			} catch (e) {
+				console.log(e)
+			} finally {
+				resolve();
+			}
+		})
+      })
 }
-  
-  
-    async dosign() {
-        console.log(`\n================ 开始账号【${this.index}】================\n\n`)
-        
-            let urlObject = {
-        url: `https://mwegame.qq.com/cfip/score_sign/doSign?serverName=&appid=1101817502&areaName=%E6%89%8BQ-%E8%8B%B9%E6%9E%9C&roleName=%E6%9E%AA%E7%A8%B3%E4%B8%8D%E5%A6%82%E4%BD%A0%E7%9A%84%E5%90%BB&openid=C2CFEB4F48B246BB401C8E363DFB1E63&gameName=%E6%9E%AA%E6%88%98%E7%8E%8B%E8%80%85&nickname=%E3%85%A4&isMainRole=0&appOpenid=141568C17C66921ED2012FACD0F98059&roleId=1074364104&areaId=3&toUin=398236906&roleJob=%E5%B7%85%E5%B3%B0%E5%A4%A7%E5%85%83%E9%A6%96&serverId=0&accessToken=303762A5AA80C2EDED475C47506CF298&gameId=20003&subGameId=20003&token=AHdz35gf&cGameId=1001&uniqueRoleId=3532317023&toOpenid=C2CFEB4F48B246BB401C8E363DFB1E63&acctype=qc&avatar=http%3A%2F%2Fq.qlogo.cn%2Fqqapp%2F1104466820%2F25FE014E0066491B348072AD541426E8%2F100%3Flevel=%2Fl%2F199c%2F91.png&accType=qc&uin=398236906&roleLevel=106&userId=559621728`,
+
+    async sign() {
+        console.log(`\n================ 开始账号[${this.index}] ================\n\n`)
+	return new Promise((resolve) => {
+            let url = {
+        url: `https://mwegame.qq.com/cfip/score_sign/doSign?${this.url}`,
         headers: {
-    "Connection":"keep-alive",
-    "Referer":userCookie,
-    "Content-Type":"application/x-www-form-urlencoded",
-    "Accept-Encoding":"gzip, deflate, br",
-    "Host":"mwegame.qq.com",
-    "User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 15_0_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 GH_QQConnect GameHelper_1001/3.10.30105.2103100105"},
+	"Cookie": `access_token=${this.access_token}; acctype=qc; appid=1101817502; openid=${this.openid}; accessToken=${this.access_token}; appId=1101817502; appOpenId=${this.openid}; appOpenid=${this.openid}; openId=${this.openid}; uin=${this.uin}; PHPSESSID=llq4miaovfr14m1kilq4lof8ga; access_token=${this.access_token}; acctype=qc; appid=1101817502; openid=${this.openid}`,
+	"Accept": "application/json",
+	"Accept-Encoding": "gzip, deflate, br",
+	"Referer": `https://mwegame.qq.com/helper/cfip/score/index.html?${this.url}`,
+	"Connection": "keep-alive",
+	"Host": "mwegame.qq.com",
+	"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 GH_QQConnect GameHelper_1001/3.10.30105.2103100105",
+	"Accept-Language": "zh-CN,zh-Hans;q=0.9",
+	"X-Requested-With": "XMLHttpRequest"
+},
 
 };
-    
-            await httpRequest('get',urlObject)
-            let result = httpResult;
+		if (Debug) {
+		console.log(`\n================ 这是请求 url ================`);
+		console.log(JSON.stringify(url));
+		}
+		$.get(url, async (error, response, data) => { 
+			try {
+          if (Debug) {
+	     console.log(`\n================这是返回 data===============`);
+		console.log(data+"\n")}
+            let result = JSON.parse(data);
             if(!result) return
             //console.log(result)
             if(result.status == 0) {
-       console.log(`\n账号【${zh}】签到成功：获取 ${result.data.exp}`)
-       msg += `\n账号【${zh}】签到成功：获取 ${result.data.exp}\n`
+       console.log(`\n账号【${this.index}】签到成功：获取 ${result.data.exp}`)
+       msg += `\n账号【${this.index}】签到成功：获取 ${result.data.exp}\n`
         } else {
-	  console.log(`\n账号【${zh}】签到失败：${result.msg}获得：${result.data.exp}!`)
-	  msg += `\n账号【${zh}】签到失败：${result.msg}获得：${result.data.exp}!\n`
+	  console.log(`\n账号【${this.index}】签到失败：${result.msg}获得：${result.data.exp}!`)
+	  msg += `\n账号【${this.index}】签到失败：${result.msg}获得：${result.data.exp}!\n`
 
         }
 
             await $.wait(1000);
             await this.login();
 
-    }
-}
+			} catch (e) {
+				console.log(e)
+			} finally {
+				resolve();
+			}
+		})
+      })
+}}
 
 
 !(async () => {
@@ -103,10 +149,11 @@ class UserInfo {
         if(!(await checkEnv())) return;
         
         for(let user of userList) {
-            await user.dosign(); 
+            await user.sign(); 
             await $.wait(200);
-        }
+}
             await SendMsg(msg);
+        
     }
 })()
 .catch((e) => $.logErr(e))
@@ -114,8 +161,8 @@ class UserInfo {
 
 ///////////////////////////////////////////////////////////////////
 async function GetRewrite() {
-    if($request.url.indexOf(`user`) > -1) {
-        let ck = $request.headers.Authori-zation
+    if($request.url.indexOf(`getScore?`) > -1) {
+        let ck = $request.url
         
         if(userCookie) {
             if(userCookie.indexOf(ck) == -1) {
@@ -123,6 +170,18 @@ async function GetRewrite() {
                 $.setdata(userCookie, 'cfmCookie');
                 ckList = userCookie.split('@')
                 $.msg(jsname+` 获取第${ckList.length}个ck成功: ${ck}`)
+            
+} else {
+                console.log(jsname+` 找到重复的Cookie，准备替换: ${ck}`)
+             ckList = userCookie.split('@')
+             for(let i=0; i<ckList.length; i++) {
+                    if(ckList[i].indexOf('UID='+uid) > -1) {
+                        ckList[i] = ck
+                        break;
+                    }
+                }
+                userCookie = ckList.join('@')
+                $.setdata(userCookie, 'cfmCookie');
             }
         } else {
             $.setdata(ck, 'cfmCookie');
@@ -132,19 +191,21 @@ async function GetRewrite() {
 }
 
 async function checkEnv() {
+
     if(userCookie) {
         for(let userCookies of userCookie.split('@')) {
             if(userCookies) userList.push(new UserInfo(userCookies))
         }
         userCount = userList.length
     } else {
+         if ($.isNode()) {
+console.log('未填写变量cfmCookie')
+        return;
+         } else{
         console.log('未找到CK')
         return;
+  }
     }
-    
-    console.log(`共找到${userCount}个账号`)
-    return true
-
     console.log(`\n\n=========================================    \n脚本执行 - 北京时间(UTC+8)：${new Date(
 			new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 +
 			8 * 60 * 60 * 1000).toLocaleString()} \n=========================================\n`);
@@ -158,16 +219,15 @@ async function SendMsg(message) {
 	if (!message)
 		return;
 
-	if (Notify == 1) {
+	if (Notify > 0) {
 		if ($.isNode()) {
 			var notify = require('./sendNotify');
 			await notify.sendNotify($.name, message);
 		} else {
 			$.msg($.name,"",msg)
 		}
-	} else if(Notify == 2 ) {
-		dd()
-                  await $.wait(1000);
+	} else {
+	    console.log(message);
 	}
 }
 
@@ -186,6 +246,7 @@ let urlObject = {
     console.log(`\n========== 钉钉通知发送${errcode} ==========\n`)
 
 }
+
 ////////////////////////////////////////////////////////////////////
 function populateUrlObject(url,auth,body=''){
     let host = url.replace('//','/').split('/')[1]
