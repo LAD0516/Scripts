@@ -1,63 +1,29 @@
 {
-
-	"id": "GnA1J.app.sub",
-
-	"name": "GnA1J脚本订阅",
-
-	"author": "@GnA1J",
-        
-        "icon": "https://github.com/LAD0516/Scripts/raw/main/QuanX/images/JC.png",
-	
-	"apps": [{
-
-		"id": "pgrjz",
-
-		"name": "苹果软件站",
-
-		"keys": [
-
-        "ck1",
-
-        "ck2",
-
-        "ck3",
-
-        "xk4",
-
-        "ck5"
-
-		],
-
-		"author": "@GnA1J",
-
-		"settings": [{
-			
-			"id": "pgrjzCookie",
-
-			"name": "Cookie",
-
-			"val": "",
-
-			"type": "number",
-
-			"desc": "帐号Cookie"
-
-		}],
-
-		"repo": "https://raw.githubusercontent.com/LAD0516/Scripts/main/QL/pgrjz.js",
-
-		"icons": [
-
-			"https://github.com/LAD0516/Scripts/raw/main/QuanX/images/JC.png",
-
-		    "https://github.com/LAD0516/Scripts/raw/main/QuanX/images/JC.png"
-
-		],
-
-		"script": "https://raw.githubusercontent.com/LAD0516/Scripts/main/QL/pgrjz.js"
-
-	}
-	
-]	
-
-}
+    "id": "vei.app.sub",
+    "name": "GnA1J 应用订阅",
+    "author": "@GnA1J",
+    "icon": "https://github.com/LAD0516/Scripts/raw/main/QuanX/images/JC.png",
+    "repo": "https://github.com/LAD0516/Scripts/raw/main/QuanX",
+    "apps": [
+      {
+        "id": "glados",
+        "name": "GlaDos",
+        "keys": ["glados_ck"],
+        "settings": [
+        {
+          "id": "glados_ck",
+          "name": "Cookie",
+          "val": "",
+          "type": "textarea",
+          "placeholder": "xxxxxxxxx#xxxxxxxx",
+          "autoGrow": true,
+          "desc": "抓包搜索 user 把请求头的Cookie填到glados_ck中,多账号用#隔开"
+        }
+      ],
+        "author": "@GnA1J",
+        "repo": "https://github.com/LAD0516/Scripts/tree/main/QuanX/Task",
+        "icons": ["https://glados.rocks/favicon.ico", "https://glados.rocks/favicon.ico"],
+        "script": "https://raw.githubusercontent.com/LAD0516/Scripts/main/QuanX/Task/glados.js"
+      }
+    ]
+  }
