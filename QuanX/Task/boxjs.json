@@ -16,7 +16,7 @@
           "val": "",
           "type": "textarea",
           "placeholder": "xxxxxxxxx#xxxxxxxx",
-          "desc": "抓包搜索 user 把请求头的Cookie填到glados_ck中,多账号用#隔开"
+          "desc": "抓包搜索 user 把请求头的Cookie填到glados_ck中,多账号用@隔开"
         }
       ],
         "author": "@GnA1J",
