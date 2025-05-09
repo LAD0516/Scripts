@@ -1,10 +1,10 @@
 /*
   GLaDOS-签到
-  cron: 34 9,21 * * *
+  cron: 14 7,23 * * *
   @GnA1J
   ========= 青龙 =========
-  抓包搜索 user 把请求头的Cookie填到glados_ck中
-  export glados_ck='xxx@xxx'
+  抓包搜索 user 把请求头的Cookie填到gladosCookie中
+  export gladosCookie='xxx@xxx'
  
   ========= Quantumult X =========
 #GLaDos
@@ -16,11 +16,11 @@ const jsname = 'GLaDOS'
 const Debug = 0;
 const Notify = 1;   //0为关闭通知，1为默认通知
 let msg = ''
-let glados_ck = ''
+let gladosCookie = ''
 let envSplitor = ['\n','#']
 let httpResult //global buffer
 
-let userCookie = ($.isNode() ? process.env.glados_ck : $.getdata('glados_ck')) || '';
+let userCookie = ($.isNode() ? process.env.gladosCookie : $.getdata('gladosCookie')) || '';
 let userList = []
 let userCookieArr = [];
 let userIdx = 0
@@ -30,9 +30,8 @@ let userCount = 0
 class UserInfo {
     constructor(str) {
         this.index = ++userIdx
-        let strArr = str.split('#')
+        let strArr = str.split('@')
         this.cookie = strArr[0]
-        this.token = ''
     }
   
    async login() {
@@ -58,7 +57,7 @@ class UserInfo {
 		}
 		$.get(url, async (error, response, data) => { 
 			try {
-if (Debug) {
+          if (Debug) {
 	     console.log(`\n================这是返回 data===============`);
 		console.log(data+"\n")}
             let result = JSON.parse(data);
@@ -97,20 +96,27 @@ if (Debug) {
               "Origin": "https://glados.rocks",
 		    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299",		  
 			},
-	 body: `{"token": "glados.network"}`,
+	 body: `{"token": "glados.one"}`,
 
 };
+		if (Debug) {
+		console.log(`\n================ 这是请求 url ================`);
+		console.log(JSON.stringify(url));
+		}
 		$.post(url, async (error, response, data) => { 
 			try {
+          if (Debug) {
+	     console.log(`\n================这是返回 data===============`);
+		console.log(data+"\n")}
             let result = JSON.parse(data);
             if(!result) return
             //console.log(result)
             if(result.code == 0) {
-                console.log(`账号【${this.name}】签到成功，${result.message}！现有天数：${this.days}`)
-                msg += `账号【${this.name}】签到成功，${result.message}！现有天数：${this.days}\n`
+                console.log(`账号【${this.name}】签到成功，${result.message}！现有天数：${this.days}流量使用情况：${this.traffic}G/200G`)
+                msg += `账号【${this.name}】签到成功，${result.message}！现有天数：${this.days}流量使用情况：${this.traffic}G/200G\n`
         } else {
-            console.log(`账号【${this.name}】签到失败：${result.message}剩余天数：${this.days}，流量使用情况：${this.traffic}G/200G`)
-            msg += `账号【${this.name}】签到失败：${result.message}剩余天数：${this.days}，流量使用情况：${this.traffic}G/200G\n`
+            console.log(`账号【${this.name}】签到失败：${result.message}，剩余天数：${this.days}，流量使用情况：${this.traffic}G/200G`)
+            msg += `账号【${this.name}】签到失败：${result.message}，剩余天数：${this.days}，流量使用情况：${this.traffic}G/200G\n`
 
 				}
 
@@ -149,7 +155,7 @@ async function GetRewrite() {
         if(userCookie) {
             if(userCookie.indexOf(ck) == -1) {
                 userCookie = userCookie + '@' + ck
-                $.setdata(userCookie, 'glados_ck');
+                $.setdata(userCookie, 'gladosCookie');
                 ckList = userCookie.split('@')
                 $.msg(jsname+` 获取第${ckList.length}个ck成功: ${ck}`)
             
@@ -163,10 +169,10 @@ async function GetRewrite() {
                     }
                 }
                 userCookie = ckList.join('@')
-                $.setdata(userCookie, 'wbtcCookie');
+                $.setdata(userCookie, 'gladosCookie');
             }
         } else {
-            $.setdata(ck, 'glados_ck');
+            $.setdata(ck, 'gladosCookie');
             $.msg(jsname+` 获取第1个ck成功: ${ck}`)
         }
     }
@@ -180,8 +186,13 @@ async function checkEnv() {
         }
         userCount = userList.length
     } else {
+         if ($.isNode()) {
+console.log('未填写变量gladosCookie')
+        return;
+         } else{
         console.log('未找到CK')
         return;
+  }
     }
     console.log(`\n\n=========================================    \n脚本执行 - 北京时间(UTC+8)：${new Date(
 			new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 +
