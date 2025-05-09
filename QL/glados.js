@@ -3,8 +3,8 @@
   cron: 14 7,23 * * *
   @GnA1J
   ========= 青龙 =========
-  抓包搜索 user 把请求头的Cookie填到glados_ck中
-  export glados_ck='xxx@xxx'
+  抓包搜索 user 把请求头的Cookie填到gladosCookie中
+  export gladosCookie='xxx@xxx'
  
   ========= Quantumult X =========
 #GLaDos
@@ -16,11 +16,11 @@ const jsname = 'GLaDOS'
 const Debug = 0;
 const Notify = 1;   //0为关闭通知，1为默认通知
 let msg = ''
-let glados_ck = ''
+let gladosCookie = ''
 let envSplitor = ['\n','#']
 let httpResult //global buffer
 
-let userCookie = ($.isNode() ? process.env.glados_ck : $.getdata('glados_ck')) || '';
+let userCookie = ($.isNode() ? process.env.gladosCookie : $.getdata('gladosCookie')) || '';
 let userList = []
 let userCookieArr = [];
 let userIdx = 0
@@ -115,8 +115,8 @@ class UserInfo {
                 console.log(`账号【${this.name}】签到成功，${result.message}！现有天数：${this.days}流量使用情况：${this.traffic}G/200G`)
                 msg += `账号【${this.name}】签到成功，${result.message}！现有天数：${this.days}流量使用情况：${this.traffic}G/200G\n`
         } else {
-            console.log(`账号【${this.name}】签到失败：${result.message}剩余天数：${this.days}，流量使用情况：${this.traffic}G/200G`)
-            msg += `账号【${this.name}】签到失败：${result.message}剩余天数：${this.days}，流量使用情况：${this.traffic}G/200G\n`
+            console.log(`账号【${this.name}】签到失败：${result.message}，剩余天数：${this.days}，流量使用情况：${this.traffic}G/200G`)
+            msg += `账号【${this.name}】签到失败：${result.message}，剩余天数：${this.days}，流量使用情况：${this.traffic}G/200G\n`
 
 				}
 
@@ -155,7 +155,7 @@ async function GetRewrite() {
         if(userCookie) {
             if(userCookie.indexOf(ck) == -1) {
                 userCookie = userCookie + '@' + ck
-                $.setdata(userCookie, 'glados_ck');
+                $.setdata(userCookie, 'gladosCookie');
                 ckList = userCookie.split('@')
                 $.msg(jsname+` 获取第${ckList.length}个ck成功: ${ck}`)
             
@@ -169,10 +169,10 @@ async function GetRewrite() {
                     }
                 }
                 userCookie = ckList.join('@')
-                $.setdata(userCookie, 'wbtcCookie');
+                $.setdata(userCookie, 'gladosCookie');
             }
         } else {
-            $.setdata(ck, 'glados_ck');
+            $.setdata(ck, 'gladosCookie');
             $.msg(jsname+` 获取第1个ck成功: ${ck}`)
         }
     }
@@ -186,8 +186,13 @@ async function checkEnv() {
         }
         userCount = userList.length
     } else {
+         if ($.isNode()) {
+console.log('未填写变量gladosCookie')
+        return;
+         } else{
         console.log('未找到CK')
         return;
+  }
     }
     console.log(`\n\n=========================================    \n脚本执行 - 北京时间(UTC+8)：${new Date(
 			new Date().getTime() + new Date().getTimezoneOffset() * 60 * 1000 +
