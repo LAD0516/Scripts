@@ -8,14 +8,14 @@
       {
         "id": "glados",
         "name": "GlaDos",
-        "keys": ["glados_ck"],
+        "keys": ["gladosCookie"],
         "settings": [
         {
-          "id": "glados_ck",
+          "id": "gladosCookie",
           "name": "Cookie",
           "val": "",
           "type": "textarea",
-          "placeholder": "xxxxxxxxx#xxxxxxxx",
+          "placeholder": "xxxxxxxxx@xxxxxxxx",
           "desc": "抓包搜索 user 把请求头的Cookie填到glados_ck中,多账号用@隔开"
         }
       ],
