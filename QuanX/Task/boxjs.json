@@ -16,7 +16,6 @@
           "val": "",
           "type": "textarea",
           "placeholder": "xxxxxxxxx#xxxxxxxx",
-          "autoGrow": true,
           "desc": "抓包搜索 user 把请求头的Cookie填到glados_ck中,多账号用#隔开"
         }
       ],
