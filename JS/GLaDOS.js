@@ -1,38 +1,35 @@
 /*
 * ==UserScript==
 * @ScriptName        【GLaDOS】
-* @Author            【GnA1J】
+* @Author            【@GnA1J】
 * @UpdateTime        【26.9.27】
-* @ScriptFunction    【GLaDOS-签到】
+* @ScriptFunction    【GLaDOS-签到获取积分】
 * @Attention         【Cookie有效期暂时未知】
-* @AppletPath        【export gladosCookie =cookie&UA多账号用@隔开】
+* @AppletPath        【export gladosCookie = cookie&UA多账号用@隔开】
 * @ScriptURL         【https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js】
 * ==/UserScript==
 【QuantumultX】 :
-*************************
 [rewrite_local]
 https://glados.cloud/api/user/status url script-request-body https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js
 [task_local]
 15 7,15 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js, tag=glados
-*************************
+
 【Loon】 :
-*************************
 [Script]
 http-request https://glados.cloud/api/user/status tag=gladosCookie, script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js
 cron "15 7,15 * * *" script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js,tag=glados
-*************************
+
 【Surge】 :
-*************************
+
 [Script]
 glados = type=cron,cronexp="15 7,15 * * *",wake-system=1,timeout=120,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js
 gladosCookie = type=http-request,pattern=https://glados.cloud/api/user/status,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js
-*************************
+
 【小火箭】 :
-*************************
 [Script]
 glados = type=cron,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js, cronexpr="15 7,15 * * *", timeout=500, enable=true
 gladosCookie = type=http-request,pattern=https://glados.cloud/api/user/status,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js
-*************************
+
 [mitm]
 hostname = glados.cloud
 */
@@ -40,8 +37,9 @@ hostname = glados.cloud
 const $ = new Env("GLaDOS")
 const Notify = 1; 
 const debug = 0; 
-const minDelay = 15;  //延时(秒)
-const maxDelay = 60; 
+const Diagnostics = 1;
+const minDelay = 3;  //延时(秒)
+const maxDelay = 10; 
 let msg = '';
 $.signKeyglados = 'gladosCookie'
 let isGetCookie = typeof $request !== 'undefined';
@@ -88,8 +86,9 @@ if (isGetCookie) {
       ? (process.env.gladosCookie || ($.getdata($.signKeyglados)))
       : ($.getdata($.signKeyglados));
     if (!rawCookies) {
-      console.log("未检测到 Cookie，请先获取 Cookie！");
-      $.msg($.name, "签到失败", "未检测到 Cookie");
+      let text = "未检测到 Cookie，请先获取 Cookie！";
+      console.log(text);
+      $.msg($.name, text);
       return;
     }
     let accountList = rawCookies.split('@').filter(item => item.trim() !== '');
@@ -120,8 +119,8 @@ if (isGetCookie) {
         await signin(accountData, userState);
 
       } catch (e) {
-        console.log(`第 ${index + 1} 个账号数据解析或执行异常: `, e);
-        msg += `第 ${index + 1} 个账号数据解析失败！\n`;
+        let text = `第 (${index + 1} 个账号数据解析或执行异常:)${e.message || e}`;
+        msg += `${text}\n`;
       }
     }
 
@@ -148,6 +147,11 @@ async function login(accountData, userState) {
       body: '',
     }
     if (debug){console.log(JSON.stringify(url))};
+    if (!data) {
+      console.log(`账号登录查询失败：接口未返回数据 (data 为 undefined/null)，请检查网络或 Cookie 配置`);
+      if (Diagnostics) msg += `🔍 [status 异常]: 接口未返回数据\n`;
+      return;
+    }
     $.get(url, (err, resp, data) => {
       try {
         if (debug){console.log(data)};
@@ -156,10 +160,13 @@ async function login(accountData, userState) {
           userState.name = result.data.email;
           userState.days = result.data.leftDays / 1;
           userState.traffic = result.data.traffic / 1000000000;
-          console.log(`账号【${userState.name}】登录查询成功！`);
+          let text = `账号【${userState.name}】登录查询成功！`;
+          console.log(text);
+          msg += `${text}\n`;
         } else {
-          console.log(`账号登录查询失败：${result.message}`);
-          msg += `账号登录查询失败：${result.message}\n`;
+          let text = `账号登录查询失败：${result.message}`;
+          console.log(text);
+          msg += `${text}\n`;
         }
       } catch (e) {
         console.log(e);
@@ -190,13 +197,21 @@ async function info(accountData, userState) {
     $.get(url, (err, resp, data) => {
       try {
         if (debug){console.log(data)};
+        if (!data) {
+          console.log(`账号登录查询失败：接口未返回数据 (data 为 undefined/null)，请检查网络或 Cookie 配置`);
+          if (Diagnostics) msg += `🔍 [status 异常]: 接口未返回数据\n`;
+          return;
+        }
         const result = JSON.parse(data);
         if (result.code == 0) {
           userState.point = result.points / 1;
-          console.log(`账号【${userState.name}】积分查询成功！`);
+          let text =`账号【${userState.name}】积分查询成功！`;
+          console.log(text);
+          msg += `${text}\n`;
         } else {
-          console.log(`账号【${userState.name}】积分查询失败：${result.message}`);
-          msg += `账号【${userState.name}】积分查询失败：${result.message}\n`;
+          let text =`账号【${userState.name}】积分查询失败：${result.message}`;
+          console.log(text);
+          msg += `${text}\n`;
         }
       } catch (e) {
         console.log(e);
@@ -229,17 +244,24 @@ async function signin(accountData, userState) {
     $.post(url, (err, resp, data) => {
       try {
         if (debug){console.log(data)};
+        if (!data) {
+          console.log(`账号登录查询失败：接口未返回数据 (data 为 undefined/null)，请检查网络或 Cookie 配置`);
+          if (Diagnostics) msg += `🔍 [status 异常]: 接口未返回数据\n`;
+          return;
+        }
         const result = JSON.parse(data);
         let matchPoints = result.message ? result.message.match(/\d+/) : null;
         let points = matchPoints ? parseInt(matchPoints[0]) : 0;
         let Integral = userState.point + points;
 
         if (result.code == 0) {
-          console.log(`账号【${userState.name}】签到成功，${result.message}！积分：${Integral}，剩余天数：${userState.days}，流量：${userState.traffic.toFixed(2)}G/200G`);
-          msg += `账号【${userState.name}】签到成功！积分：${Integral}，剩余天数：${userState.days}，流量：${userState.traffic.toFixed(2)}G/200G\n`;
+          let text =`账号【${userState.name}】签到成功，${result.message}！积分：${Integral}，剩余天数：${userState.days}，流量：${userState.traffic.toFixed(2)}G/200G`;
+          console.log(text);
+          msg += `${text}\n`;
         } else {
-          console.log(`账号【${userState.name}】签到失败：${result.message}！积分：${Integral}，剩余天数：${userState.days}，流量：${userState.traffic.toFixed(2)}G/200G`);
-          msg += `账号【${userState.name}】签到失败：${result.message}，积分：${Integral}，剩余天数：${userState.days}，流量：${userState.traffic.toFixed(2)}G/200G\n`;
+         let text =`账号【${userState.name}】签到失败：${result.message}！积分：${Integral}，剩余天数：${userState.days}，流量：${userState.traffic.toFixed(2)}G/200G`;
+          console.log(text);
+          msg += `${text}\n`;
         }
       } catch (e) {
         console.log(e);
