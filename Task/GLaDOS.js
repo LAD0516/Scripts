@@ -6,29 +6,29 @@
 * @ScriptFunction    【GLaDOS-签到获取积分】
 * @Attention         【Cookie有效期暂时未知】
 * @AppletPath        【export gladosCookie = cookie&UA多账号用@隔开】
-* @ScriptURL         【https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js】
+* @ScriptURL         【https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js】
 * ==/UserScript==
 【QuantumultX】 :
 [rewrite_local]
-https://glados.cloud/api/user/status url script-request-body https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js
+https://glados.cloud/api/user/status url script-request-body https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
 [task_local]
-15 7,15 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js, tag=glados
+15 7,15 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js, tag=glados
 
 【Loon】 :
 [Script]
-http-request https://glados.cloud/api/user/status tag=gladosCookie, script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js
-cron "15 7,15 * * *" script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js,tag=glados
+http-request https://glados.cloud/api/user/status tag=gladosCookie, script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
+cron "15 7,15 * * *" script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js,tag=glados
 
 【Surge】 :
 
 [Script]
-glados = type=cron,cronexp="15 7,15 * * *",wake-system=1,timeout=120,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js
-gladosCookie = type=http-request,pattern=https://glados.cloud/api/user/status,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js
+glados = type=cron,cronexp="15 7,15 * * *",wake-system=1,timeout=120,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
+gladosCookie = type=http-request,pattern=https://glados.cloud/api/user/status,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
 
 【小火箭】 :
 [Script]
-glados = type=cron,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js, cronexpr="15 7,15 * * *", timeout=500, enable=true
-gladosCookie = type=http-request,pattern=https://glados.cloud/api/user/status,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/JS/GLaDOS.js
+glados = type=cron,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js, cronexpr="15 7,15 * * *", timeout=500, enable=true
+gladosCookie = type=http-request,pattern=https://glados.cloud/api/user/status,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
 
 [mitm]
 hostname = glados.cloud
