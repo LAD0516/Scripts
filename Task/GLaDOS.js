@@ -147,14 +147,14 @@ async function login(accountData, userState) {
       body: '',
     }
     if (debug){console.log(JSON.stringify(url))};
-    if (!data) {
-      console.log(`账号登录查询失败：接口未返回数据 (data 为 undefined/null)，请检查网络或 Cookie 配置`);
-      if (Diagnostics) msg += `🔍 [status 异常]: 接口未返回数据\n`;
-      return;
-    }
     $.get(url, (err, resp, data) => {
       try {
         if (debug){console.log(data)};
+        if (!data) {
+          console.log(`账号登录查询失败：接口未返回数据 (data 为 undefined/null)，请检查网络或 Cookie 配置`);
+          if (Diagnostics) msg += `🔍 [status 异常]: 接口未返回数据\n`;
+          return;
+        }
         const result = JSON.parse(data);
         if (result.code == 0) {
           userState.name = result.data.email;
