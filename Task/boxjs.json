@@ -1,0 +1,75 @@
+{
+    "id": "vei.app.sub",
+    "name": "GnA1J 应用订阅",
+    "author": "@GnA1J",
+    "icon": "https://raw.githubusercontent.com/LAD0516/Scripts/main/images/GnA1J.png",
+    "repo": "https://github.com/LAD0516/Scripts/tree/main/Task",
+    "apps": [
+      {
+        "id": "glados",
+        "name": "GlaDos",
+        "keys": [
+          "gladosNotify",
+          "gladosDebug",
+          "gladosDiagnostics",
+          "gladosMinDelay",
+          "gladosMaxDelay",
+          "gladosCookie"
+        ],
+        "settings": [
+          {
+            "id": "gladosNotify",
+            "name": "开启通知",
+            "val": true,
+            "type": "boolean",
+            "desc": "是否开启签到结果通知（默认：开启）"
+          },
+          {
+            "id": "gladosDebug",
+            "name": "Debug 调试模式",
+            "val": false,
+            "type": "boolean",
+            "desc": "是否开启 Debug 调试日志（默认：关闭）"
+          },
+          {
+            "id": "gladosDiagnostics",
+            "name": "诊断信息",
+            "val": true,
+            "type": "boolean",
+            "desc": "是否开启诊断日志输出（默认：开启）"
+          },
+          {
+            "id": "gladosMinDelay",
+            "name": "最小延时 (秒)",
+            "val": "3",
+            "type": "number",
+            "placeholder": "3",
+            "desc": "随机延时排队签到的最小秒数"
+          },
+          {
+            "id": "gladosMaxDelay",
+            "name": "最大延时 (秒)",
+            "val": "10",
+            "type": "number",
+            "placeholder": "10",
+            "desc": "随机延时排队签到的最大秒数"
+          },
+          {
+            "id": "gladosCookie",
+            "name": "Cookie",
+            "val": "",
+            "type": "textarea",
+            "placeholder": "Cookie&UA@Cookie&UA",
+            "desc": "抓包搜索 user 把请求头的Cookie和User-Agent填到gladosCookie中,中间用&隔开，多账号用@隔开"
+          }
+        ],
+        "author": "@GnA1J",
+        "repo": "https://github.com/LAD0516/Scripts/tree/main/Task",
+        "icons": [
+          "https://glados.rocks/favicon.ico",
+          "https://glados.rocks/favicon.ico"
+        ],
+        "script": "https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js"
+      }
+    ]
+  }
