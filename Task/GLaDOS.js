@@ -2,7 +2,7 @@
 * ==UserScript==
 * @ScriptName        【GLaDOS】
 * @Author            【@GnA1J】
-* @UpdateTime        【26.9.27】
+* @UpdateTime        【2026.09.27】
 * @ScriptFunction    【GLaDOS-签到获取积分】
 * @Attention         【Cookie有效期暂时未知】
 * @AppletPath        【export gladosCookie = cookie&UA多账号用@隔开】
@@ -20,7 +20,6 @@ http-request https://glados.cloud/api/user/status tag=gladosCookie, script-path=
 cron "15 7,15 * * *" script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js,tag=glados
 
 【Surge】 :
-
 [Script]
 glados = type=cron,cronexp="15 7,15 * * *",wake-system=1,timeout=120,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
 gladosCookie = type=http-request,pattern=https://glados.cloud/api/user/status,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
@@ -34,15 +33,57 @@ gladosCookie = type=http-request,pattern=https://glados.cloud/api/user/status,sc
 hostname = glados.cloud
 */
 
-const $ = new Env("GLaDOS")
-const Notify = 1; 
-const debug = 0; 
-const Diagnostics = 1;
-const minDelay = 3;  //延时(秒)
-const maxDelay = 10; 
+const $ = new Env("GLaDOS");
+function getEnv(key, defaultValue) {
+  let val = $.isNode() ? process.env[key] :$.getdata(key);
+  if (val === undefined || val === null || val === '') return defaultValue;
+  if (['true', '1'].includes(String(val).toLowerCase())) return 1;
+  if (['false', '0'].includes(String(val).toLowerCase())) return 0;
+  return isNaN(val) ? val : Number(val);
+}
+const Notify = getEnv('gladosNotify', 1);            // 默认开启通知 1
+const debug = getEnv('gladosDebug', 0);              // 默认关闭调试 0
+const Diagnostics = getEnv('gladosDiagnostics', 1);  // 默认开启诊断 1
+const minDelay = getEnv('gladosMinDelay', 3);        // 默认最小延时 3 秒
+const maxDelay = getEnv('gladosMaxDelay', 10);       // 默认最大延时 10 秒
+const maxRetries = getEnv('gladosMaxRetries', 3);    // 默认请求重试 3 次
 let msg = '';
-$.signKeyglados = 'gladosCookie'
+$.signKeyglados = 'gladosCookie';
 let isGetCookie = typeof $request !== 'undefined';
+async function httpRequestWithRetry(options, method = 'get', retries = maxRetries, retryDelay = 2000) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      if (debug) {
+        console.log(`\n---------------- [DEBUG HTTP ${method.toUpperCase()}] ----------------`);
+        console.log(`[请求 URL]: ${options.url}`);
+        if (options.body) console.log(`[请求 Body]: ${options.body}`);
+      }
+      
+      const res = await new Promise((resolve) => {
+        const httpFunc = method.toLowerCase() === 'post' ? $.post.bind($) : $.get.bind($);
+        httpFunc(options, (err, resp, data) => {
+          resolve({ err, resp, data });
+        });
+      });
+      const status = res.resp ? (res.resp.status || res.resp.statusCode) : '无状态码';
+  
+      if (debug) {
+        console.log(`[HTTP 状态码]: ${status}`);
+        if (res.err) console.log(`[请求 异常]:`, res.err);
+        console.log(`[返回 Data]: ${res.data ? res.data.trim() : '（返回内容为空）'}`);
+        console.log(`--------------------------------------------------\n`);
+      }
+      if (!res.err && res.data) {
+        return res.data;
+      }
+      console.log(`⚠️ 第 \({attempt} 次请求失败 (\){options.url}) | 状态码: \({status} | 原因:\){res.err ? JSON.stringify(res.err) : 'data 为空'}`);
+      
+      if (attempt < retries) {
+        console.log(`等待 \({retryDelay / 1000} 秒后进行第\){attempt + 1} 次重试...`);
+        await $.wait(retryDelay);
+      }
+    }
+    return null;
+  }
 if (isGetCookie) {
   !(async () => {
     const session = {
@@ -54,7 +95,7 @@ if (isGetCookie) {
     let savedData = $.getdata($.signKeyglados) || '';
     let sessionStr = JSON.stringify(session);
     if (!savedData) {
-      $.setdata(sessionStr, $.signKeyglados);
+      $.setdata(sessionStr,$.signKeyglados);
       $.subt = `获取会话: 成功保存第 1 个账号!`;
     } else {
       let accounts = savedData.split('@');
@@ -65,16 +106,16 @@ if (isGetCookie) {
           if (acc.headers && acc.headers['Cookie'] === session.headers['Cookie']) {
             accounts[i] = sessionStr;
             updated = true;
-            $.subt = `获取会话: 成功更新第 ${i + 1} 个账号!`;
+            $.subt = `获取会话: 成功更新第${i + 1} 个账号!`;
             break;
           }
         } catch(e) {}
       }
       if (!updated) {
         accounts.push(sessionStr);
-        $.subt = `获取会话: 成功追加第 ${accounts.length} 个账号!`;
+        $.subt = `获取会话: 成功追加第${accounts.length} 个账号!`;
       }
-      $.setdata(accounts.join('@'), $.signKeyglados);
+      $.setdata(accounts.join('@'),$.signKeyglados);
     } 
     $.msg($.name, $.subt, '')
   })()
@@ -131,145 +172,127 @@ if (isGetCookie) {
 }
 
 async function login(accountData, userState) {
-  return new Promise((resolve) => {
-    let signheaders = accountData.headers || {};
-    const url = { 
-      url: 'https://glados.cloud/api/user/status',
-      headers: {
-        'Accept-Encoding' : `gzip, deflate, br`,
-        'Cookie' : signheaders['Cookie'] || '',
-        'Connection' : `keep-alive`,
-        'Accept' : `application/json, text/plain, */*`,
-        'Host' : `glados.cloud`,
-        'User-Agent' : signheaders['User-Agent'] || '',
-        'Accept-Language' : `zh-CN,zh-Hans;q=0.9`,
-      },
-      body: '',
+  let signheaders = accountData.headers || {};
+  const urlOpts = { 
+    url: 'https://glados.cloud/api/user/status',
+    headers: {
+      'Accept-Encoding' : `gzip, deflate, br`,
+      'Cookie' : signheaders['Cookie'] || '',
+      'Connection' : `keep-alive`,
+      'Accept' : `application/json, text/plain, */*`,
+      'Host' : `glados.cloud`,
+      'User-Agent' : signheaders['User-Agent'] || '',
+      'Accept-Language' : `zh-CN,zh-Hans;q=0.9`,
+    },
+    body: '',
+  };
+
+  const data = await httpRequestWithRetry(urlOpts, 'get');
+  try {
+    if (!data) {
+      console.log(`账号登录查询失败：多次重试仍未返回数据，请检查网络或 Cookie 配置`);
+      if (Diagnostics) msg += `🔍 [status 异常]: 接口多次请求未返回数据\n`;
+      return;
     }
-    if (debug){console.log(JSON.stringify(url))};
-    $.get(url, (err, resp, data) => {
-      try {
-        if (debug){console.log(data)};
-        if (!data) {
-          console.log(`账号登录查询失败：接口未返回数据 (data 为 undefined/null)，请检查网络或 Cookie 配置`);
-          if (Diagnostics) msg += `🔍 [status 异常]: 接口未返回数据\n`;
-          return;
-        }
-        const result = JSON.parse(data);
-        if (result.code == 0) {
-          userState.name = result.data.email;
-          userState.days = result.data.leftDays / 1;
-          userState.traffic = result.data.traffic / 1000000000;
-          let text = `账号【${userState.name}】登录查询成功！`;
-          console.log(text);
-          msg += `${text}\n`;
-        } else {
-          let text = `账号登录查询失败：${result.message}`;
-          console.log(text);
-          msg += `${text}\n`;
-        }
-      } catch (e) {
-        console.log(e);
-      } finally {
-        resolve();
-      }
-    })
-  })
+    const result = JSON.parse(data);
+    if (result.code == 0) {
+      userState.name = result.data.email;
+      userState.days = result.data.leftDays / 1;
+      userState.traffic = result.data.traffic / 1000000000;
+      let text = `账号【${userState.name}】登录查询成功！`;
+      console.log(text);
+      msg += `${text}\n`;
+    } else {
+      let text = `账号登录查询失败：${result.message}`;
+      console.log(text);
+      msg += `${text}\n`;
+    }
+  } catch (e) {
+    console.log(`login 解析报错:`, e);
+  }
 }
 
 async function info(accountData, userState) {
-  return new Promise((resolve) => {
-    let signheaders = accountData.headers || {};
-    const url = { 
-      url: 'https://glados.cloud/api/user/points',
-      headers: {
-        'Accept-Encoding' : `gzip, deflate, br`,
-        'Cookie' : signheaders['Cookie'] || '',
-        'Connection' : `keep-alive`,
-        'Accept' : `application/json, text/plain, */*`,
-        'Host' : `glados.cloud`,
-        'User-Agent' : signheaders['User-Agent'] || '',
-        'Accept-Language' : `zh-CN,zh-Hans;q=0.9`,
-      },
-      body: '',
+  let signheaders = accountData.headers || {};
+  const urlOpts = { 
+    url: 'https://glados.cloud/api/user/points',
+    headers: {
+      'Accept-Encoding' : `gzip, deflate, br`,
+      'Cookie' : signheaders['Cookie'] || '',
+      'Connection' : `keep-alive`,
+      'Accept' : `application/json, text/plain, */*`,
+      'Host' : `glados.cloud`,
+      'User-Agent' : signheaders['User-Agent'] || '',
+      'Accept-Language' : `zh-CN,zh-Hans;q=0.9`,
+    },
+    body: '',
+  };
+
+  const data = await httpRequestWithRetry(urlOpts, 'get');
+  try {
+    if (!data) {
+      console.log(`账号积分查询失败：多次重试仍未返回数据，请检查网络或 Cookie 配置`);
+      if (Diagnostics) msg += `🔍 [points 异常]: 接口多次请求未返回数据\n`;
+      return;
     }
-    if (debug){console.log(JSON.stringify(url))};
-    $.get(url, (err, resp, data) => {
-      try {
-        if (debug){console.log(data)};
-        if (!data) {
-          console.log(`账号登录查询失败：接口未返回数据 (data 为 undefined/null)，请检查网络或 Cookie 配置`);
-          if (Diagnostics) msg += `🔍 [status 异常]: 接口未返回数据\n`;
-          return;
-        }
-        const result = JSON.parse(data);
-        if (result.code == 0) {
-          userState.point = result.points / 1;
-          let text =`账号【${userState.name}】积分查询成功！`;
-          console.log(text);
-          msg += `${text}\n`;
-        } else {
-          let text =`账号【${userState.name}】积分查询失败：${result.message}`;
-          console.log(text);
-          msg += `${text}\n`;
-        }
-      } catch (e) {
-        console.log(e);
-      } finally {
-        resolve();
-      }
-    })
-  })
+    const result = JSON.parse(data);
+    if (result.code == 0) {
+      userState.point = result.points / 1;
+      let text =`账号【${userState.name}】积分查询成功！`;
+      console.log(text);
+      msg += `${text}\n`;
+    } else {
+      let text =`账号【${userState.name}】积分查询失败：${result.message}`;
+      console.log(text);
+      msg += `${text}\n`;
+    }
+  } catch (e) {
+    console.log(`info 解析报错:`, e);
+  }
 }
 
 async function signin(accountData, userState) {
-  return new Promise((resolve) => {
-    let signheaders = accountData.headers || {};
-    const url = { 
-      url: 'https://glados.cloud/api/user/checkin',
-      headers: {
-        'Origin' : `https://glados.cloud`,
-        'Cookie' : signheaders['Cookie'] || '',
-        'Connection' : `keep-alive`,
-        'Content-Type' : `application/json;charset=utf-8`,
-        'Accept' : `application/json, text/plain, */*`,
-        'Host' : `glados.cloud`,
-        'User-Agent' : signheaders['User-Agent'] || '',
-        'Accept-Language' : `zh-CN,zh-Hans;q=0.9`,
-        'Accept-Encoding' : `gzip, deflate, br`,
-      },
-      body: '{"token": "glados.cloud"}',
-    }
-    if (debug){console.log(JSON.stringify(url))};
-    $.post(url, (err, resp, data) => {
-      try {
-        if (debug){console.log(data)};
-        if (!data) {
-          console.log(`账号登录查询失败：接口未返回数据 (data 为 undefined/null)，请检查网络或 Cookie 配置`);
-          if (Diagnostics) msg += `🔍 [status 异常]: 接口未返回数据\n`;
-          return;
-        }
-        const result = JSON.parse(data);
-        let matchPoints = result.message ? result.message.match(/\d+/) : null;
-        let points = matchPoints ? parseInt(matchPoints[0]) : 0;
-        let Integral = userState.point + points;
+  let signheaders = accountData.headers || {};
+  const urlOpts = { 
+    url: 'https://glados.cloud/api/user/checkin',
+    headers: {
+      'Origin' : `https://glados.cloud`,
+      'Cookie' : signheaders['Cookie'] || '',
+      'Connection' : `keep-alive`,
+      'Content-Type' : `application/json;charset=utf-8`,
+      'Accept' : `application/json, text/plain, */*`,
+      'Host' : `glados.cloud`,
+      'User-Agent' : signheaders['User-Agent'] || '',
+      'Accept-Language' : `zh-CN,zh-Hans;q=0.9`,
+      'Accept-Encoding' : `gzip, deflate, br`,
+    },
+    body: '{"token": "glados.cloud"}',
+  };
 
-        if (result.code == 0) {
-          let text =`账号【${userState.name}】签到成功，${result.message}！积分：${Integral}，剩余天数：${userState.days}，流量：${userState.traffic.toFixed(2)}G/200G`;
-          console.log(text);
-          msg += `${text}\n`;
-        } else {
-         let text =`账号【${userState.name}】签到失败：${result.message}！积分：${Integral}，剩余天数：${userState.days}，流量：${userState.traffic.toFixed(2)}G/200G`;
-          console.log(text);
-          msg += `${text}\n`;
-        }
-      } catch (e) {
-        console.log(e);
-      } finally {
-        resolve();
-      }
-    })
-  })
+  const data = await httpRequestWithRetry(urlOpts, 'post');
+  try {
+    if (!data) {
+      console.log(`账号签到失败：多次重试仍未返回数据，请检查网络或 Cookie 配置`);
+      if (Diagnostics) msg += `🔍 [checkin 异常]: 接口多次请求未返回数据\n`;
+      return;
+    }
+    const result = JSON.parse(data);
+    let matchPoints = result.message ? result.message.match(/\d+/) : null;
+    let points = matchPoints ? parseInt(matchPoints[0]) : 0;
+    let Integral = userState.point + points;
+
+    if (result.code == 0) {
+      let text =`账号【${userState.name}】签到成功，${result.message}！积分：${Integral}，剩余天数：${userState.days}，流量：${userState.traffic.toFixed(2)}G/10G`;
+      console.log(text);
+      msg += `${text}\n`;
+    } else {
+      let text =`账号【${userState.name}】签到失败：${result.message}！积分：${Integral}，剩余天数：${userState.days}，流量：${userState.traffic.toFixed(2)}G/10G`;
+      console.log(text);
+      msg += `${text}\n`;
+    }
+  } catch (e) {
+    console.log(`signin 解析报错:`, e);
+  }
 }
 
 async function SendMsg(message) {
