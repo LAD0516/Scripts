@@ -12,7 +12,7 @@
 [rewrite_local]
 https://glados.cloud/api/user/status url script-request-body https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
 [task_local]
-15 7,15 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js, tag=glados
+20 7,16 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js, tag=GlaDos签到, img-url=https://glados.rocks/favicon.ico, enabled=true
 
 【Loon】 :
 [Script]
