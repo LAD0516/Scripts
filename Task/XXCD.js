@@ -12,24 +12,19 @@
 [rewrite_local]
 https://gateway.starcharge.com/apph5/xcxApiV2/wechat/starPoint/sign url script-request-body https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js
 [task_local]
-15 7,15 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js, tag=星星充电
-
+15 7,15 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js, tag=星星充电，img-url=https://webcdn.starcharge.com/resources/logo/2606/favicon.ico, enabled=true
 【Loon】 :
 [Script]
 http-request https://gateway.starcharge.com/apph5/xcxApiV2/wechat/starPoint/sign tag=XXCDCookie, script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js
 cron "15 7,15 * * *" script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js,tag=星星充电
-
 【Surge】 :
-
 [Script]
 星星充电 = type=cron,cronexp="15 7,15 * * *",wake-system=1,timeout=120,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js
 XXCDCookie = type=http-request,pattern=https://gateway.starcharge.com/apph5/xcxApiV2/wechat/starPoint/sign,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js
-
 【小火箭】 :
 [Script]
 星星充电 = type=cron,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js, cronexpr="15 7,15 * * *", timeout=500, enable=true
 XXCDCookie = type=http-request,pattern=https://gateway.starcharge.com/apph5/xcxApiV2/wechat/starPoint/sign,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js
-
 [mitm]
 hostname = gateway.starcharge.com
 */
