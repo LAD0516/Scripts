@@ -12,18 +12,18 @@
 [rewrite_local]
 https://m.jlc.com/api/activity/sign/signIn url script-request-body https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/JLC.js
 [task_local]
-15 7,15 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/JLC.js, tag=嘉立创, enabled=true
+28 8,16 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/JLC.js, tag=嘉立创, enabled=true
 【Loon】 :
 [Script]
 http-request https://m.jlc.com/api/activity/sign/signIn tag=JLCCookie, script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/JLC.js
-cron "15 7,15 * * *" script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/JLC.js,tag=嘉立创
+cron "28 8,16 * * *" script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/JLC.js,tag=嘉立创
 【Surge】 :
 [Script]
-嘉立创 = type=cron,cronexp="15 7,15 * * *",wake-system=1,timeout=120,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/JLC.js
+嘉立创 = type=cron,cronexp="28 8,16 * * *",wake-system=1,timeout=120,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/JLC.js
 JLCCookie = type=http-request,pattern=https://m.jlc.com/api/activity/sign/signIn,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/JLC.js
 【小火箭】 :
 [Script]
-嘉立创 = type=cron,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/JLC.js, cronexpr="15 7,15 * * *", timeout=500, enable=true
+嘉立创 = type=cron,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/JLC.js, cronexpr="28 8,16 * * *", timeout=500, enable=true
 JLCCookie = type=http-request,pattern=https://m.jlc.com/api/activity/sign/signIn,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/JLC.js
 [mitm]
 hostname = m.jlc.com
