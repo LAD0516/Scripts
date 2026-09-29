@@ -1,11 +1,11 @@
 /*
 * ==UserScript==
-* @ScriptName        【XXCD】
+* @ScriptName        【星星充电】
 * @Author            【@GnA1J】
 * @UpdateTime        【2026.09.29】
 * @ScriptFunction    【星星充电-签到获取积分】
 * @Attention         【Cookie有效期暂时未知】
-* @AppletPath        【export XXCDCookie = cookie&UA多账号用@隔开】
+* @AppletPath        【export XXCDCookie = 抓包sign请求头和body完整JSON格式，或者直接填X-Ca-Signature值&X-Ca-Timestamp值&x-uid值&userId值&Authorization值&User-Agent值&body值，多账号都用@隔开】
 * @ScriptURL         【https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js】
 * ==/UserScript==
 【QuantumultX】 :
@@ -31,18 +31,60 @@ XXCDCookie = type=http-request,pattern=https://gateway.starcharge.com/apph5/xcxA
 XXCDCookie = type=http-request,pattern=https://gateway.starcharge.com/apph5/xcxApiV2/wechat/starPoint/sign,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js
 
 [mitm]
-hostname = XXCD.cloud
+hostname = gateway.starcharge.com
 */
 
 const $ = new Env("星星充电")
-const Notify = 1; 
-const debug = 0; 
-const Diagnostics = 1;
-const minDelay = 3;  //延时(秒)
-const maxDelay = 10; 
+function getEnv(key, defaultValue) {
+  let val = $.isNode() ? process.env[key] :$.getdata(key);
+  if (val === undefined || val === null || val === '') return defaultValue;
+  if (['true', '1'].includes(String(val).toLowerCase())) return 1;
+  if (['false', '0'].includes(String(val).toLowerCase())) return 0;
+  return isNaN(val) ? val : Number(val);
+}
+const Notify = getEnv('XXCDNotify', 1);            // 默认开启通知 1
+const debug = getEnv('XXCDDebug', 0);              // 默认关闭调试 0
+const Diagnostics = getEnv('XXCDDiagnostics', 1);  // 默认开启诊断 1
+const minDelay = getEnv('XXCDMinDelay', 3);        // 默认最小延时 3 秒
+const maxDelay = getEnv('XXCDMaxDelay', 8);        // 默认最大延时 8 秒
+const maxRetries = getEnv('XXCDMaxRetries', 3);    // 默认请求重试 3 次
 let msg = '';
 $.signKeyXXCD = 'XXCDCookie'
 let isGetCookie = typeof $request !== 'undefined';
+async function httpRequestWithRetry(options, method = 'get', retries = maxRetries, retryDelay = 2000) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    if (debug) {
+      console.log(`\n---------------- [DEBUG HTTP ${method.toUpperCase()}] ----------------`);
+      console.log(`[请求 URL]: ${options.url}`);
+      if (options.body) console.log(`[请求 Body]: ${options.body}`);
+    }
+
+    const res = await new Promise((resolve) => {
+      const httpFunc = method.toLowerCase() === 'post' ? $.post.bind($) : $.get.bind($);
+      httpFunc(options, (err, resp, data) => {
+        resolve({ err, resp, data });
+      });
+    });
+    const status = res.resp ? (res.resp.status || res.resp.statusCode) : '无状态码';
+
+    if (debug) {
+      console.log(`[HTTP 状态码]: ${status}`);
+      if (res.err) console.log(`[请求 异常]:`, res.err);
+      console.log(`[返回 Data]: ${res.data ? res.data.trim() : '（返回内容为空）'}`);
+      console.log(`--------------------------------------------------\n`);
+    }
+    if (!res.err && res.data) {
+      return res.data;
+    }
+    console.log(`⚠️ 第 ${attempt} 次请求失败 (${options.url}) | 状态码: ${status} | 原因: ${res.err ? JSON.stringify(res.err) : 'data 为空'}`);
+
+    if (attempt < retries) {
+      console.log(`等待 ${retryDelay / 1000} 秒后进行第 ${attempt + 1} 次重试...`);
+      await $.wait(retryDelay);
+    }
+  }
+  return null;
+}
 if (isGetCookie) {
   !(async () => {
     const session = {
@@ -55,7 +97,7 @@ if (isGetCookie) {
     let sessionStr = JSON.stringify(session);
     if (!savedData) {
       $.setdata(sessionStr, $.signKeyXXCD);
-      $.subt = `获取会话: 成功保存第 1 个账号!`;
+      $.subt = `获取会话成功：已保存第 1 个账号!`;
     } else {
       let accounts = savedData.split('@');
       let updated = false;
@@ -65,18 +107,18 @@ if (isGetCookie) {
           if (acc.headers && acc.headers['Cookie'] === session.headers['Cookie']) {
             accounts[i] = sessionStr;
             updated = true;
-            $.subt = `获取会话: 成功更新第 ${i + 1} 个账号!`;
+            $.subt = `获取会话成功：已更新第 ${i + 1} 个账号!`;
             break;
           }
         } catch(e) {}
       }
       if (!updated) {
         accounts.push(sessionStr);
-        $.subt = `获取会话: 成功追加第 ${accounts.length} 个账号!`;
+        $.subt = `获取会话成功：已追加第 ${accounts.length} 个账号!`;
       }
       $.setdata(accounts.join('@'), $.signKeyXXCD);
     } 
-    $.msg($.name, $.subt, '')
+    $.msg($.name, $.subt, '可在 BoxJS 中查看/编辑 XXCDCookie 变量');
   })()
   .catch((e) => $.logErr(e))
   .finally(() => $.done())
@@ -100,13 +142,19 @@ if (isGetCookie) {
         if (accStr.startsWith('{')) {
             accountData = JSON.parse(accStr);
           } else {
-            let [cookie, ua] = accStr.split('&');
-            accountData = {
-              headers: {
-                'Cookie': cookie ? cookie.trim() : '',
-                'User-Agent': ua ? ua.trim() : ''
-              }
-            };
+            let arr = accStr.split('&');
+  accountData = {
+    headers: {
+      'X-Ca-Signature': arr[0] ? arr[0].trim() : '',
+      'X-Ca-Timestamp': arr[1] ? arr[1].trim() : '',
+      'x-uid': arr[2] ? arr[2].trim() : '',
+      'userId': arr[3] ? arr[3].trim() : '',
+      'Authorization': arr[4] ? arr[4].trim() : '',
+      'User-Agent': arr[5] ? arr[5].trim() : ''
+    },
+    body: arr[6] ? arr[6].trim() : ''
+  };
+            
           }
         console.log(`\n============== 开始执行第 ${index + 1}/${accountList.length} 个账号 ==============`);   
         const randomDelayTime = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay; 
@@ -130,10 +178,9 @@ if (isGetCookie) {
 }
 
 async function info(accountData, userState) {
-  return new Promise((resolve) => {
     let signheaders = accountData.headers || {};
     let requestBody = accountData.body || '';
-    const url = { 
+    const urlOpts = { 
       url: `https://gateway.starcharge.com/apph5/v2/xcxApiV2/wechat/star/point/user?${requestBody}`,
       headers: {
     'Connection': `keep-alive`,
@@ -157,13 +204,11 @@ async function info(accountData, userState) {
       },
       body: '',
     }
-    if (debug){console.log(JSON.stringify(url))};
-    $.get(url, (err, resp, data) => {
+    const data = await httpRequestWithRetry(urlOpts, 'get');
       try {
-        if (debug){console.log(data)};
         if (!data) {
-          console.log(`账号登录查询失败：接口未返回数据 (data 为 undefined/null)，请检查网络或 Cookie 配置`);
-          if (Diagnostics) msg += `🔍 [status 异常]: 接口未返回数据\n`;
+          console.log(`账号积分查询失败：多次重试仍未返回数据，请检查网络或 Cookie 配置`);
+          if (Diagnostics) msg += `🔍 [points 异常]: 接口多次请求未返回数据\n`;
           return;
         }
         const result = JSON.parse(data);
@@ -179,19 +224,13 @@ async function info(accountData, userState) {
           msg += `${text}\n`;
         }
       } catch (e) {
-        console.log(e);
-      } finally {
-        resolve();
+        console.log(`info 解析报错:`, e);
       }
-    })
-  })
-}
-
+  }
 async function signin(accountData, userState) {
-  return new Promise((resolve) => {
     let signheaders = accountData.headers || {};
     let requestBody = accountData.body || '';
-    const url = { 
+    const urlOpts = { 
       url: 'https://gateway.starcharge.com/apph5/xcxApiV2/wechat/starPoint/sign',
       headers: {
         'Connection': `keep-alive`,
@@ -215,13 +254,11 @@ async function signin(accountData, userState) {
           },
           body: requestBody,
         }
-    if (debug){console.log(JSON.stringify(url))};
-    $.post(url, (err, resp, data) => {
+        const data = await httpRequestWithRetry(urlOpts, 'post');
       try {
-        if (debug){console.log(data)};
         if (!data) {
-          console.log(`账号登录查询失败：接口未返回数据 (data 为 undefined/null)，请检查网络或 Cookie 配置`);
-          if (Diagnostics) msg += `🔍 [status 异常]: 接口未返回数据\n`;
+          console.log(`账号积分查询失败：多次重试仍未返回数据，请检查网络或 Cookie 配置`);
+          if (Diagnostics) msg += `🔍 [points 异常]: 接口多次请求未返回数据\n`;
           return;
         }
           const result = JSON.parse(data);
@@ -255,12 +292,8 @@ async function signin(accountData, userState) {
         msg += `登录失败：${result.text}\n`;
         }
       } catch (e) {
-        console.log(e);
-      } finally {
-        resolve();
+        console.log(`info 解析报错:`, e);
       }
-    })
-  })
 }
 
 async function SendMsg(message) {
