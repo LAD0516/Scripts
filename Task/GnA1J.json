@@ -1,0 +1,8 @@
+{
+    "name": "GnA1J-Task",
+    "description": "9.29更新",
+    "task": [
+      "20 7,16 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js, tag=GlaDos签到, img-url=https://glados.rocks/favicon.ico, enabled=true",
+      "20 7,16 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js, tag=GlaDos签到, img-url=https://glados.rocks/favicon.ico, enabled=true"
+    ]
+  }
