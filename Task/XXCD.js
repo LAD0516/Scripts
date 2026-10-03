@@ -12,18 +12,18 @@
 [rewrite_local]
 https://gateway.starcharge.com/apph5/xcxApiV2/wechat/starPoint/sign url script-request-body https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js
 [task_local]
-15 7,15 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js, tag=星星充电，img-url=https://webcdn.starcharge.com/resources/logo/2606/favicon.ico, enabled=true
+13 8,19 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js, tag=星星充电，img-url=https://webcdn.starcharge.com/resources/logo/2606/favicon.ico, enabled=true
 【Loon】 :
 [Script]
 http-request https://gateway.starcharge.com/apph5/xcxApiV2/wechat/starPoint/sign tag=XXCDCookie, script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js
-cron "15 7,15 * * *" script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js,tag=星星充电
+cron "13 8,19 * * *" script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js,tag=星星充电
 【Surge】 :
 [Script]
-星星充电 = type=cron,cronexp="15 7,15 * * *",wake-system=1,timeout=120,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js
+星星充电 = type=cron,cronexp="13 8,19 * * *",wake-system=1,timeout=120,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js
 XXCDCookie = type=http-request,pattern=https://gateway.starcharge.com/apph5/xcxApiV2/wechat/starPoint/sign,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js
 【小火箭】 :
 [Script]
-星星充电 = type=cron,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js, cronexpr="15 7,15 * * *", timeout=500, enable=true
+星星充电 = type=cron,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js, cronexpr="13 8,19 * * *", timeout=500, enable=true
 XXCDCookie = type=http-request,pattern=https://gateway.starcharge.com/apph5/xcxApiV2/wechat/starPoint/sign,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js
 [mitm]
 hostname = gateway.starcharge.com
@@ -51,6 +51,7 @@ async function httpRequestWithRetry(options, method = 'get', retries = maxRetrie
     if (debug) {
       console.log(`\n---------------- [DEBUG HTTP ${method.toUpperCase()}] ----------------`);
       console.log(`[请求 URL]: ${options.url}`);
+      console.log(`[请求 Headers]: ${JSON.stringify(options.headers, null, 2)}`);
       if (options.body) console.log(`[请求 Body]: ${options.body}`);
     }
 
@@ -277,7 +278,7 @@ async function signin(accountData, userState) {
           console.log(text);
           msg += `${text}\n`;
         } else if (result.code == 200) {
-          let text =`账号【${userState.name}】签到成功！已连续签到${userState.continuousDay}天！还差${userState.bonusLeftDay}天获得额外积分${userState.bonusPoint}！总积分：${Integral}`;
+          let text =`账号【${userState.name}】签到成功！获得积分：${userState.basePoint}，已连续签到${userState.continuousDay}天！还差${userState.bonusLeftDay}天获得额外积分${userState.bonusPoint}！总积分：${Integral}`;
           console.log(text);
           msg += `${text}\n`;
         }
