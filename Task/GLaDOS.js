@@ -12,22 +12,22 @@
 [rewrite_local]
 https://glados.cloud/api/user/status url script-request-body https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
 [task_local]
-20 7,16 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js, tag=GlaDos签到, img-url=https://glados.rocks/favicon.ico, enabled=true
+27 7,16 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js, tag=GlaDos签到, img-url=https://glados.rocks/favicon.ico, enabled=true
 
 【Loon】 :
 [Script]
-http-request https://glados.cloud/api/user/status tag=gladosCookie, script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
-cron "15 7,15 * * *" script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js,tag=glados
+http-request https://glados.cloud/api/user/status tag=GLaDOSCookie, script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
+cron "27 7,16 * * *" script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js,tag=GLaDOS签到
 
 【Surge】 :
 [Script]
-glados = type=cron,cronexp="15 7,15 * * *",wake-system=1,timeout=120,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
-gladosCookie = type=http-request,pattern=https://glados.cloud/api/user/status,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
+GLaDOS签到 = type=cron,cronexp="27 7,16 * * *",wake-system=1,timeout=120,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
+GLaDOSCookie = type=http-request,pattern=https://glados.cloud/api/user/status,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
 
 【小火箭】 :
 [Script]
-glados = type=cron,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js, cronexpr="15 7,15 * * *", timeout=500, enable=true
-gladosCookie = type=http-request,pattern=https://glados.cloud/api/user/status,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
+GLaDOS签到 = type=cron,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js, cronexpr="27 7,16 * * *", timeout=500, enable=true
+GLaDOSCookie = type=http-request,pattern=https://glados.cloud/api/user/status,script-path=https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js
 
 [mitm]
 hostname = glados.cloud
@@ -55,6 +55,7 @@ async function httpRequestWithRetry(options, method = 'get', retries = maxRetrie
       if (debug) {
         console.log(`\n---------------- [DEBUG HTTP ${method.toUpperCase()}] ----------------`);
         console.log(`[请求 URL]: ${options.url}`);
+        console.log(`[请求 Headers]: ${JSON.stringify(options.headers, null, 2)}`);
         if (options.body) console.log(`[请求 Body]: ${options.body}`);
       }
       
@@ -75,10 +76,10 @@ async function httpRequestWithRetry(options, method = 'get', retries = maxRetrie
       if (!res.err && res.data) {
         return res.data;
       }
-      console.log(`⚠️ 第 \({attempt} 次请求失败 (\){options.url}) | 状态码: \({status} | 原因:\){res.err ? JSON.stringify(res.err) : 'data 为空'}`);
+      console.log(`⚠️ 第 ${attempt} 次请求失败 (${options.url}) | 状态码: ${status} | 原因:${res.err ? JSON.stringify(res.err) : 'data 为空'}`);
       
       if (attempt < retries) {
-        console.log(`等待 \({retryDelay / 1000} 秒后进行第\){attempt + 1} 次重试...`);
+        console.log(`等待 ${retryDelay / 1000} 秒后进行第${attempt + 1} 次重试...`);
         await $.wait(retryDelay);
       }
     }
