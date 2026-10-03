@@ -2,8 +2,8 @@
     "name": "GnA1J-Task",
     "description": "9.29更新",
     "task": [
-      "20 7,16 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js, tag=GlaDos签到, img-url=https://glados.rocks/favicon.ico, enabled=true",
-      "15 7,15 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js, tag=星星充电, img-url=https://webcdn.starcharge.com/resources/logo/2606/favicon.ico, enabled=true",
+      "27 7,16 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/GLaDOS.js, tag=GlaDos签到, img-url=https://glados.rocks/favicon.ico, enabled=true",
+      "13 8,19 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js, tag=星星充电, img-url=https://webcdn.starcharge.com/resources/logo/2606/favicon.ico, enabled=true",
       "28 8,16 * * * https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/JLC.js, tag=嘉立创, enabled=true"
     ]
   }
