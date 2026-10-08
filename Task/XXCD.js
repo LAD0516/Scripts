@@ -2,7 +2,7 @@
 * ==UserScript==
 * @ScriptName        【星星充电】
 * @Author            【@GnA1J】
-* @UpdateTime        【2026.09.29】
+* @UpdateTime        【2026.10.03】
 * @ScriptFunction    【星星充电-签到获取积分】
 * @Attention         【Cookie有效期暂时未知】
 * @AppletPath        【export XXCDCookie = 抓包sign请求头和body完整JSON格式，或者直接填X-Ca-Signature值&X-Ca-Timestamp值&x-uid值&userId值&Authorization值&User-Agent值&body值，多账号都用@隔开】
@@ -31,7 +31,7 @@ hostname = gateway.starcharge.com
 
 const $ = new Env("星星充电")
 function getEnv(key, defaultValue) {
-  let val = $.isNode() ? process.env[key] :$.getdata(key);
+  let val = $.isNode() ? process.env[key] : $.getdata(key);
   if (val === undefined || val === null || val === '') return defaultValue;
   if (['true', '1'].includes(String(val).toLowerCase())) return 1;
   if (['false', '0'].includes(String(val).toLowerCase())) return 0;
@@ -42,10 +42,33 @@ const debug = getEnv('XXCDDebug', 0);              // 默认关闭调试 0
 const Diagnostics = getEnv('XXCDDiagnostics', 1);  // 默认开启诊断 1
 const minDelay = getEnv('XXCDMinDelay', 3);        // 默认最小延时 3 秒
 const maxDelay = getEnv('XXCDMaxDelay', 8);        // 默认最大延时 8 秒
-const maxRetries = getEnv('XXCDMaxRetries', 3);    // 默认请求重试 3 次
+const maxRetries = getEnv('XXCDMaxRetries', 3);    // 默认请求重试 3 次（仅 GET 生效）
 let msg = '';
 $.signKeyXXCD = 'XXCDCookie'
 let isGetCookie = typeof $request !== 'undefined';
+function buildHeaders(h) {
+  return {
+    'Connection': 'keep-alive',
+    'X-Ca-Signature': h['X-Ca-Signature'] || '',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'X-Ca-Timestamp': h['X-Ca-Timestamp'] || '',
+    'memberAdType': '',
+    'channel-id': '100',
+    'x-uid': h['x-uid'] || '',
+    'Origin': 'https://scm-app-h5.starcharge.com',
+    'userId': h['userId'] || '',
+    'X-Encrypted': 'true',
+    'Authorization': h['Authorization'] || '',
+    'User-Agent': h['User-Agent'] || '',
+    'Host': 'gateway.starcharge.com',
+    'Referer': 'https://scm-app-h5.starcharge.com/',
+    'appVersion': '8.10.0.2',
+    'Accept-Language': 'zh-CN,zh-Hans;q=0.9',
+    'Accept': 'application/json, text/plain, */*',
+    'positCity': '410900',
+  };
+}
+
 async function httpRequestWithRetry(options, method = 'get', retries = maxRetries, retryDelay = 2000) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     if (debug) {
@@ -81,8 +104,15 @@ async function httpRequestWithRetry(options, method = 'get', retries = maxRetrie
   }
   return null;
 }
+
 if (isGetCookie) {
   !(async () => {
+    if (!$request.headers || !$request.headers['Cookie']) {
+      const text = '抓包失败：未获取到 Cookie，请确认重写规则已生效';
+      console.log(text);
+      $.msg($.name, text, '');
+      return;
+    }
     const session = {
       url: $request.url,
       body: $request.body,
@@ -106,21 +136,21 @@ if (isGetCookie) {
             $.subt = `获取会话成功：已更新第 ${i + 1} 个账号!`;
             break;
           }
-        } catch(e) {}
+        } catch (e) { }
       }
       if (!updated) {
         accounts.push(sessionStr);
         $.subt = `获取会话成功：已追加第 ${accounts.length} 个账号!`;
       }
       $.setdata(accounts.join('@'), $.signKeyXXCD);
-    } 
+    }
     $.msg($.name, $.subt, '可在 BoxJS 中查看/编辑 XXCDCookie 变量');
   })()
-  .catch((e) => $.logErr(e))
-  .finally(() => $.done())
+    .catch((e) => $.logErr(e))
+    .finally(() => $.done())
 } else {
   !(async () => {
-    let rawCookies = $.isNode() 
+    let rawCookies = $.isNode()
       ? (process.env.XXCDCookie || ($.getdata($.signKeyXXCD)))
       : ($.getdata($.signKeyXXCD));
     if (!rawCookies) {
@@ -132,172 +162,134 @@ if (isGetCookie) {
     let accountList = rawCookies.split('@').filter(item => item.trim() !== '');
     console.log(`共检测到 ${accountList.length} 个账号，准备开始执行签到...`);
     for (let index = 0; index < accountList.length; index++) {
-        let accStr = accountList[index].trim();
-        let accountData = {};
+      let accStr = accountList[index].trim();
+      let accountData = {};
       try {
         if (accStr.startsWith('{')) {
-            accountData = JSON.parse(accStr);
-          } else {
-            let arr = accStr.split('&');
-  accountData = {
-    headers: {
-      'X-Ca-Signature': arr[0] ? arr[0].trim() : '',
-      'X-Ca-Timestamp': arr[1] ? arr[1].trim() : '',
-      'x-uid': arr[2] ? arr[2].trim() : '',
-      'userId': arr[3] ? arr[3].trim() : '',
-      'Authorization': arr[4] ? arr[4].trim() : '',
-      'User-Agent': arr[5] ? arr[5].trim() : ''
-    },
-    body: arr[6] ? arr[6].trim() : ''
-  };
-            
-          }
-        console.log(`\n============== 开始执行第 ${index + 1}/${accountList.length} 个账号 ==============`);   
-        const randomDelayTime = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay; 
+          accountData = JSON.parse(accStr);
+        } else {
+          let arr = accStr.split('&');
+          accountData = {
+            headers: {
+              'X-Ca-Signature': arr[0] ? arr[0].trim() : '',
+              'X-Ca-Timestamp': arr[1] ? arr[1].trim() : '',
+              'x-uid': arr[2] ? arr[2].trim() : '',
+              'userId': arr[3] ? arr[3].trim() : '',
+              'Authorization': arr[4] ? arr[4].trim() : '',
+              'User-Agent': arr[5] ? arr[5].trim() : ''
+            },
+            body: arr[6] ? arr[6].trim() : ''
+          };
+        }
+        console.log(`\n============== 开始执行第 ${index + 1}/${accountList.length} 个账号 ==============`);
+        const randomDelayTime = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
         console.log(`等待 ${randomDelayTime} 秒后执行...`);
         await $.wait(randomDelayTime * 1000);
-        let userState = { name: '', days: 0, traffic: 0, point: 0 };
+        let userState = { name: '未知', point: 0 };
         await info(accountData, userState);
         await $.wait(500);
         await signin(accountData, userState);
-
       } catch (e) {
-        let text = `第 (${index + 1} 个账号数据解析或执行异常:)${e.message || e}`;
+        let text = `第 ${index + 1} 个账号数据解析或执行异常: ${e.message || e}`;
+        console.log(text);
         msg += `${text}\n`;
       }
     }
-
     await SendMsg(msg);
   })()
-  .catch((e) => $.logErr(e))
-  .finally(() => $.done())
+    .catch((e) => $.logErr(e))
+    .finally(() => $.done())
+}
+async function info(accountData, userState) {
+  let signheaders = accountData.headers || {};
+  let requestBody = accountData.body || '';
+  const urlOpts = {
+    url: `https://gateway.starcharge.com/apph5/v2/xcxApiV2/wechat/star/point/user?${requestBody}`,
+    headers: buildHeaders(signheaders),
+    body: '',
+  }
+  const data = await httpRequestWithRetry(urlOpts, 'get');
+  try {
+    if (!data) {
+      console.log(`账号积分查询失败：多次重试仍未返回数据，请检查网络或 Cookie 配置`);
+      if (Diagnostics) msg += `🔍 [points 异常]: 接口多次请求未返回数据\n`;
+      return;
+    }
+    const result = JSON.parse(data);
+    if (String(result.code) === '200' && result.data) {
+      userState.point = Number(result.data.points) || 0;
+      userState.name = result.data.nickName || '未知';
+      let text = `账号【${userState.name}】积分查询成功！当前积分：${userState.point}`;
+      console.log(text);
+      msg += `${text}\n`;
+    } else {
+      let text = `账号【${userState.name}】积分查询失败：${result.message || result.text || '未知错误'}`;
+      console.log(text);
+      msg += `${text}\n`;
+    }
+  } catch (e) {
+    console.log(`info 解析报错:`, e);
+    msg += `积分查询解析异常：${e.message || e}\n`;
+  }
 }
 
-async function info(accountData, userState) {
-    let signheaders = accountData.headers || {};
-    let requestBody = accountData.body || '';
-    const urlOpts = { 
-      url: `https://gateway.starcharge.com/apph5/v2/xcxApiV2/wechat/star/point/user?${requestBody}`,
-      headers: {
-    'Connection': `keep-alive`,
-    'X-Ca-Signature': signheaders['X-Ca-Signature'] || '',
-    'Accept-Encoding': `gzip, deflate, br`,
-    'X-Ca-Timestamp': signheaders['X-Ca-Timestamp'] || '',
-    'memberAdType' : '',
-    'channel-id': `100`,
-    'x-uid': signheaders['x-uid'] || '',
-    'Origin': `https: //scm-app-h5.starcharge.com`,
-    'userId': signheaders['userId'] || '',
-    'X-Encrypted': 'true',
-    'Authorization': signheaders['Authorization'] || '',
-    'User-Agent': signheaders['User-Agent'] || '',
-    'Host': `gateway.starcharge.com`,
-    'Referer': `https: //scm-app-h5.starcharge.com/`,
-    'appVersion': `8.10.0.2`,
-    'Accept-Language': `zh-CN,zh-Hans;q=0.9`,
-    'Accept': `application/json, text/plain, */*`,
-    'positCity': `410900`,
-      },
-      body: '',
-    }
-    const data = await httpRequestWithRetry(urlOpts, 'get');
-      try {
-        if (!data) {
-          console.log(`账号积分查询失败：多次重试仍未返回数据，请检查网络或 Cookie 配置`);
-          if (Diagnostics) msg += `🔍 [points 异常]: 接口多次请求未返回数据\n`;
-          return;
-        }
-        const result = JSON.parse(data);
-        if (result.code == 200) {
-          userState.point = result.data.points;
-          userState.name = result.data.nickName;
-          let text =`账号【${userState.name}】积分查询成功！`;
-          console.log(text);
-          msg += `${text}\n`;
-        } else {
-          let text =`账号【${userState.name}】积分查询失败：${result.message}`;
-          console.log(text);
-          msg += `${text}\n`;
-        }
-      } catch (e) {
-        console.log(`info 解析报错:`, e);
-      }
-  }
 async function signin(accountData, userState) {
-    let signheaders = accountData.headers || {};
-    let requestBody = accountData.body || '';
-    const urlOpts = { 
-      url: 'https://gateway.starcharge.com/apph5/xcxApiV2/wechat/starPoint/sign',
-      headers: {
-        'Connection': `keep-alive`,
-        'X-Ca-Signature': signheaders['X-Ca-Signature'] || '',
-        'Accept-Encoding': `gzip, deflate, br`,
-        'X-Ca-Timestamp': signheaders['X-Ca-Timestamp'] || '',
-        'memberAdType' : '',
-        'channel-id': `100`,
-        'x-uid': signheaders['x-uid'] || '',
-        'Origin': `https: //scm-app-h5.starcharge.com`,
-        'userId': signheaders['userId'] || '',
-        'X-Encrypted': 'true',
-        'Authorization': signheaders['Authorization'] || '',
-        'User-Agent': signheaders['User-Agent'] || '',
-        'Host': `gateway.starcharge.com`,
-        'Referer': `https: //scm-app-h5.starcharge.com/`,
-        'appVersion': `8.10.0.2`,
-        'Accept-Language': `zh-CN,zh-Hans;q=0.9`,
-        'Accept': `application/json, text/plain, */*`,
-        'positCity': `410900`,
-          },
-          body: requestBody,
-        }
-        const data = await httpRequestWithRetry(urlOpts, 'post');
-      try {
-        if (!data) {
-          console.log(`账号积分查询失败：多次重试仍未返回数据，请检查网络或 Cookie 配置`);
-          if (Diagnostics) msg += `🔍 [points 异常]: 接口多次请求未返回数据\n`;
-          return;
-        }
-          const result = JSON.parse(data);
-          if (result && result.data) {
-            let repeat = result.data.popup === false ? 1 : 0;
-            userState.bonusPoint = Number(result.data.bonusPoint) || 0;
-            userState.basePoint = Number(result.data.basePoint) || 0;
-            userState.continuousDay = result.data.continuousDay || 0;
-            userState.bonusLeftDay = result.data.bonusLeftDay || 0;
-  
-            // 计算总积分
-            let currentPoint = Number(userState.point) || 0;
-            let Integral = 0;
-            if (userState.bonusLeftDay !== 0) {
-              Integral = currentPoint + 2;
-            } else {   
-              Integral = userState.bonusPoint + currentPoint + 2;
-            }
-          if (repeat == 1) {
-          let text =`账号【${userState.name}】重复签到！已连续签到${userState.continuousDay}天！还差${userState.bonusLeftDay}天获得额外积分${userState.bonusPoint}！总积分：${Integral}`;
-          console.log(text);
-          msg += `${text}\n`;
-        } else if (result.code == 200) {
-          let text =`账号【${userState.name}】签到成功！获得积分：${userState.basePoint}，已连续签到${userState.continuousDay}天！还差${userState.bonusLeftDay}天获得额外积分${userState.bonusPoint}！总积分：${Integral}`;
-          console.log(text);
-          msg += `${text}\n`;
-        }
-        } else {
-        let text = `登录失败：${result.text}`;
-        console.log(text);
-        msg += `登录失败：${result.text}\n`;
-        }
-      } catch (e) {
-        console.log(`info 解析报错:`, e);
-      }
+  let signheaders = accountData.headers || {};
+  let requestBody = accountData.body || '';
+  const urlOpts = {
+    url: 'https://gateway.starcharge.com/apph5/xcxApiV2/wechat/starPoint/sign',
+    headers: buildHeaders(signheaders),
+    body: requestBody,
+  }
+  const data = await httpRequestWithRetry(urlOpts, 'post', 1);
+  try {
+    if (!data) {
+      console.log(`账号签到失败：接口未返回数据，请检查网络或 Cookie 配置`);
+      if (Diagnostics) msg += `🔍 [sign 异常]: 接口未返回数据\n`;
+      return;
+    }
+    const result = JSON.parse(data);
+    if (String(result.code) !== '200' || !result.data) {
+      let text = `账号【${userState.name}】签到失败：${result.text || result.message || '未知错误'}`;
+      console.log(text);
+      msg += `${text}\n`;
+      return;
+    }
+
+    const d = result.data;
+    const base = Number(d.basePoint) || 0;      // 今日基础分
+    const bonus = Number(d.bonusPoint) || 0;    // 满勤额外分
+    const left = Number(d.bonusLeftDay) || 0;   // 还差几天满勤
+    const continuousDay = Number(d.continuousDay) || 0;
+    const earned = base + (left === 0 ? bonus : 0);
+    const Integral = (Number(userState.point) || 0) + earned;
+    // popup === false 表示今日已签到（不弹窗）
+    if (d.popup === false) {
+      let text = `账号【${userState.name}】重复签到！已连续签到 ${continuousDay} 天！还差 ${left} 天获得额外积分 ${bonus}！总积分：${Integral}`;
+      console.log(text);
+      msg += `${text}\n`;
+    } else {
+      let text = `账号【${userState.name}】签到成功！获得积分：${base}${left === 0 ? ` + 满勤 ${bonus}` : ''}，已连续签到 ${continuousDay} 天！还差 ${left} 天获得额外积分 ${bonus}！总积分：${Integral}`;
+      console.log(text);
+      msg += `${text}\n`;
+    }
+  } catch (e) {
+    console.log(`signin 解析报错:`, e);
+    msg += `签到解析异常：${e.message || e}\n`;
+  }
 }
 
 async function SendMsg(message) {
   if (!message) return;
   if (Notify > 0) {
     if ($.isNode()) {
-      const notify = require('./sendNotify');
-      await notify.sendNotify($.name, message);
+      try {
+        const notify = require('./sendNotify');
+        await notify.sendNotify($.name, message);
+      } catch (e) {
+        console.log('sendNotify 加载失败，回退到 console:', e.message || e);
+        console.log(message);
+      }
     } else {
       $.msg($.name, "", message);
     }
