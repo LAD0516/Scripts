@@ -3,7 +3,7 @@
 * @ScriptName        【嘉立创】
 * @Author            【@GnA1J】
 * @UpdateTime        【2026.09.29】
-* @ScriptFunction    【嘉立创-签到获取积分】
+* @ScriptFunction    【嘉立创-签到获取金豆】
 * @Attention         【Cookie有效期暂时未知】
 * @AppletPath        【export JLCCookie = 抓包sign请求头完整JSON格式，或者直接填X-JLC-AccessToken值&X-JLC-MP-AppId值&secretkey值&User-Agent值，多账号都用@隔开】
 * @ScriptURL         【https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/JLC.js】
