@@ -4,7 +4,7 @@
 * @Author            【@GnA1J】
 * @UpdateTime        【2026.10.03】
 * @ScriptFunction    【星星充电-签到获取积分】
-* @Attention         【Cookie有效期暂时未知】
+* @Attention         【Cookie有效期12天】
 * @AppletPath        【export XXCDCookie = 抓包sign请求头和body完整JSON格式，或者直接填X-Ca-Signature值&X-Ca-Timestamp值&x-uid值&userId值&Authorization值&User-Agent值&body值，多账号都用@隔开】
 * @ScriptURL         【https://raw.githubusercontent.com/LAD0516/Scripts/main/Task/XXCD.js】
 * ==/UserScript==
@@ -30,22 +30,36 @@ hostname = gateway.starcharge.com
 */
 
 const $ = new Env("星星充电")
-function getEnv(key, defaultValue) {
-  let val = $.isNode() ? process.env[key] : $.getdata(key);
-  if (val === undefined || val === null || val === '') return defaultValue;
-  if (['true', '1'].includes(String(val).toLowerCase())) return 1;
-  if (['false', '0'].includes(String(val).toLowerCase())) return 0;
-  return isNaN(val) ? val : Number(val);
-}
 const Notify = getEnv('XXCDNotify', 1);            // 默认开启通知 1
 const debug = getEnv('XXCDDebug', 0);              // 默认关闭调试 0
 const Diagnostics = getEnv('XXCDDiagnostics', 1);  // 默认开启诊断 1
-const minDelay = getEnv('XXCDMinDelay', 3);        // 默认最小延时 3 秒
-const maxDelay = getEnv('XXCDMaxDelay', 8);        // 默认最大延时 8 秒
 const maxRetries = getEnv('XXCDMaxRetries', 3);    // 默认请求重试 3 次（仅 GET 生效）
+const a = toDelay(getEnv('XXCDMinDelay'), 5);      // 默认最小延时 5 秒
+const b = toDelay(getEnv('XXCDMaxDelay'), 20);     // 默认最大延时 20 秒
+const [min, max] = a <= b ? [a, b] : [b, a];
 let msg = '';
 $.signKeyXXCD = 'XXCDCookie'
 let isGetCookie = typeof $request !== 'undefined';
+function toDelay(v, fallback) {
+  const n = Number(v);
+  return v == null || String(v).trim() === '' || !Number.isFinite(n)
+    ? fallback
+    : Math.max(0, Math.floor(n));
+}
+function getEnv(key, defaultValue) {
+  let val;
+  if ($.isNode() && typeof process !== 'undefined' && process.env) {
+    val = process.env[key];
+  } else {
+    val = $.getdata(key);
+  }
+  if (val === undefined || val === null || val === '') return defaultValue;
+  const str = String(val).trim().toLowerCase();
+  if (['true', '1'].includes(str)) return 1;
+  if (['false', '0'].includes(str)) return 0;
+  const num = Number(val);
+  return Number.isFinite(num) ? num : defaultValue;
+}
 function buildHeaders(h) {
   return {
     'Connection': 'keep-alive',
@@ -68,7 +82,6 @@ function buildHeaders(h) {
     'positCity': '410900',
   };
 }
-
 async function httpRequestWithRetry(options, method = 'get', retries = maxRetries, retryDelay = 2000) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     if (debug) {
@@ -77,7 +90,6 @@ async function httpRequestWithRetry(options, method = 'get', retries = maxRetrie
       console.log(`[请求 Headers]: ${JSON.stringify(options.headers, null, 2)}`);
       if (options.body) console.log(`[请求 Body]: ${options.body}`);
     }
-
     const res = await new Promise((resolve) => {
       const httpFunc = method.toLowerCase() === 'post' ? $.post.bind($) : $.get.bind($);
       httpFunc(options, (err, resp, data) => {
@@ -104,7 +116,6 @@ async function httpRequestWithRetry(options, method = 'get', retries = maxRetrie
   }
   return null;
 }
-
 if (isGetCookie) {
   !(async () => {
     if (!$request.headers || !$request.headers['Cookie']) {
@@ -154,11 +165,13 @@ if (isGetCookie) {
       ? (process.env.XXCDCookie || ($.getdata($.signKeyXXCD)))
       : ($.getdata($.signKeyXXCD));
     if (!rawCookies) {
-      let text = "未检测到 Cookie，请先获取 Cookie！";
-      console.log(text);
-      $.msg($.name, text);
-      return;
-    }
+  const text = $.isNode()
+    ? '未检测到变量，请先配置XXCDCookie变量！'
+    : '未检测到Cookie，请先获取Cookie！';
+  console.log(text);
+  $.msg($.name, text);
+  return;
+}
     let accountList = rawCookies.split('@').filter(item => item.trim() !== '');
     console.log(`共检测到 ${accountList.length} 个账号，准备开始执行签到...`);
     for (let index = 0; index < accountList.length; index++) {
@@ -182,7 +195,7 @@ if (isGetCookie) {
           };
         }
         console.log(`\n============== 开始执行第 ${index + 1}/${accountList.length} 个账号 ==============`);
-        const randomDelayTime = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+        const randomDelayTime = Math.floor(Math.random() * (max - min + 1)) + min;
         console.log(`等待 ${randomDelayTime} 秒后执行...`);
         await $.wait(randomDelayTime * 1000);
         let userState = { name: '未知', point: 0 };
@@ -206,7 +219,6 @@ async function info(accountData, userState) {
   const urlOpts = {
     url: `https://gateway.starcharge.com/apph5/v2/xcxApiV2/wechat/star/point/user?${requestBody}`,
     headers: buildHeaders(signheaders),
-    body: '',
   }
   const data = await httpRequestWithRetry(urlOpts, 'get');
   try {
@@ -278,21 +290,19 @@ async function signin(accountData, userState) {
     msg += `签到解析异常：${e.message || e}\n`;
   }
 }
-
 async function SendMsg(message) {
   if (!message) return;
   if (Notify > 0) {
     if ($.isNode()) {
       try {
         const notify = require('./sendNotify');
-        await notify.sendNotify($.name, message);
+        if (notify && typeof notify.sendNotify === 'function') {
+          return await notify.sendNotify($.name, message);
+        }
       } catch (e) {
-        console.log('sendNotify 加载失败，回退到 console:', e.message || e);
-        console.log(message);
       }
-    } else {
-      $.msg($.name, "", message);
     }
+    $.msg($.name, "", message);
   } else {
     console.log(message);
   }
