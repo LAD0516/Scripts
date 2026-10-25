@@ -34,22 +34,36 @@ hostname = glados.cloud
 */
 
 const $ = new Env("GLaDOS");
-function getEnv(key, defaultValue) {
-  let val = $.isNode() ? process.env[key] :$.getdata(key);
-  if (val === undefined || val === null || val === '') return defaultValue;
-  if (['true', '1'].includes(String(val).toLowerCase())) return 1;
-  if (['false', '0'].includes(String(val).toLowerCase())) return 0;
-  return isNaN(val) ? val : Number(val);
-}
 const Notify = getEnv('gladosNotify', 1);            // 默认开启通知 1
 const debug = getEnv('gladosDebug', 0);              // 默认关闭调试 0
 const Diagnostics = getEnv('gladosDiagnostics', 1);  // 默认开启诊断 1
-const minDelay = getEnv('gladosMinDelay', 3);        // 默认最小延时 3 秒
-const maxDelay = getEnv('gladosMaxDelay', 10);       // 默认最大延时 10 秒
 const maxRetries = getEnv('gladosMaxRetries', 3);    // 默认请求重试 3 次
+const a = toDelay(getEnv('gladosMinDelay'), 5);      // 默认最小延时 5 秒
+const b = toDelay(getEnv('gladosMaxDelay'), 20);     // 默认最大延时 20 秒
+const [min, max] = a <= b ? [a, b] : [b, a];
 let msg = '';
 $.signKeyglados = 'gladosCookie';
 let isGetCookie = typeof $request !== 'undefined';
+function toDelay(v, fallback) {
+  const n = Number(v);
+  return v == null || String(v).trim() === '' || !Number.isFinite(n)
+    ? fallback
+    : Math.max(0, Math.floor(n));
+}
+function getEnv(key, defaultValue) {
+  let val;
+  if ($.isNode() && typeof process !== 'undefined' && process.env) {
+    val = process.env[key];
+  } else {
+    val = $.getdata(key);
+  }
+  if (val === undefined || val === null || val === '') return defaultValue;
+  const str = String(val).trim().toLowerCase();
+  if (['true', '1'].includes(str)) return 1;
+  if (['false', '0'].includes(str)) return 0;
+  const num = Number(val);
+  return Number.isFinite(num) ? num : defaultValue;
+}
 async function httpRequestWithRetry(options, method = 'get', retries = maxRetries, retryDelay = 2000) {
     for (let attempt = 1; attempt <= retries; attempt++) {
       if (debug) {
@@ -127,12 +141,14 @@ if (isGetCookie) {
     let rawCookies = $.isNode() 
       ? (process.env.gladosCookie || ($.getdata($.signKeyglados)))
       : ($.getdata($.signKeyglados));
-    if (!rawCookies) {
-      let text = "未检测到 Cookie，请先获取 Cookie！";
-      console.log(text);
-      $.msg($.name, text);
-      return;
-    }
+ if (!rawCookies) {
+  const text = $.isNode()
+    ? '未检测到变量，请先配置gladosCookie变量！'
+    : '未检测到Cookie，请先获取Cookie！';
+  console.log(text);
+  $.msg($.name, text);
+  return;
+}
     let accountList = rawCookies.split('@').filter(item => item.trim() !== '');
     console.log(`共检测到 ${accountList.length} 个账号，准备开始执行签到...`);
     for (let index = 0; index < accountList.length; index++) {
@@ -151,7 +167,7 @@ if (isGetCookie) {
             };
           }
         console.log(`\n============== 开始执行第 ${index + 1}/${accountList.length} 个账号 ==============`);   
-        const randomDelayTime = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay; 
+        const randomDelayTime = Math.floor(Math.random() * (max - min + 1)) + min;
         console.log(`等待 ${randomDelayTime} 秒后执行...`);
         await $.wait(randomDelayTime * 1000);
         let userState = { name: '', days: 0, traffic: 0, point: 0 };
@@ -165,13 +181,11 @@ if (isGetCookie) {
         msg += `${text}\n`;
       }
     }
-
     await SendMsg(msg);
   })()
   .catch((e) => $.logErr(e))
   .finally(() => $.done())
 }
-
 async function login(accountData, userState) {
   let signheaders = accountData.headers || {};
   const urlOpts = { 
@@ -185,7 +199,6 @@ async function login(accountData, userState) {
       'User-Agent' : signheaders['User-Agent'] || '',
       'Accept-Language' : `zh-CN,zh-Hans;q=0.9`,
     },
-    body: '',
   };
 
   const data = await httpRequestWithRetry(urlOpts, 'get');
@@ -226,7 +239,6 @@ async function info(accountData, userState) {
       'User-Agent' : signheaders['User-Agent'] || '',
       'Accept-Language' : `zh-CN,zh-Hans;q=0.9`,
     },
-    body: '',
   };
 
   const data = await httpRequestWithRetry(urlOpts, 'get');
@@ -295,16 +307,19 @@ async function signin(accountData, userState) {
     console.log(`signin 解析报错:`, e);
   }
 }
-
 async function SendMsg(message) {
   if (!message) return;
   if (Notify > 0) {
     if ($.isNode()) {
-      const notify = require('./sendNotify');
-      await notify.sendNotify($.name, message);
-    } else {
-      $.msg($.name, "", message);
+      try {
+        const notify = require('./sendNotify');
+        if (notify && typeof notify.sendNotify === 'function') {
+          return await notify.sendNotify($.name, message);
+        }
+      } catch (e) {
+      }
     }
+    $.msg($.name, "", message);
   } else {
     console.log(message);
   }
